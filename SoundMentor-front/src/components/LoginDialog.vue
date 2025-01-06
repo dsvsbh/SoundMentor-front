@@ -1,7 +1,11 @@
 <template>
-  <el-dialog v-model="visible" title="SoundMentor" width="400px">
+  <el-dialog v-model="visible" width="400px">
     <div v-if="isLogin">
-      <h3>账户管理登录</h3>
+      <div class="cover">
+        <img src="../assets/logo.png" alt="logo" />
+        <h2>SoundMentor</h2>
+        <p>智能语言教学的引领者</p>
+      </div>
       <el-form :model="loginForm" ref="loginFormRef">
         <el-form-item
           label="账号"
@@ -17,16 +21,35 @@
         >
           <el-input v-model="loginForm.password" type="password" />
         </el-form-item>
+        <div class="under-pwd">
+          <el-form-item style="margin-bottom: 0">
+            <el-checkbox v-model="rememberMe">自动登录</el-checkbox>
+          </el-form-item>
+          <a href="javascript:void(0)" @click="handleForgotPassword"
+            >忘记密码</a
+          >
+        </div>
         <el-form-item>
-          <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleLogin">登录</el-button>
-          <el-button @click="toggleForm">注册账号</el-button>
+          <el-button
+            style="
+              width: 100%;
+              height: 40px;
+              background-color: #1890ff;
+              color: white;
+            "
+            @click="handleLogin"
+            >登录</el-button
+          >
+          <a href="javascript:void(0)" @click="toggleForm">注册账号</a>
         </el-form-item>
       </el-form>
     </div>
     <div v-else>
+      <div class="cover">
+        <img src="../assets/logo.png" alt="logo" />
+        <h2>SoundMentor</h2>
+        <p>智能语言教学的引领者</p>
+      </div>
       <h3>注册账号</h3>
       <el-form :model="registerForm" ref="registerFormRef">
         <el-form-item
@@ -84,10 +107,15 @@
         </el-form-item>
       </el-form>
     </div>
+    <forgot-password-dialog ref="forgotPasswordRef" />
   </el-dialog>
 </template>  
   
   <script>
+import { userLoginService, userRegisterService } from "@/api/user.js";
+import { ElMessage } from "element-plus";
+import ForgotPasswordDialog from "./ForgotPasswordDialog.vue";
+
 export default {
   props: {
     modelValue: {
@@ -123,40 +151,93 @@ export default {
       this.$emit("update:modelValue", val);
     },
   },
+  components: {
+    ForgotPasswordDialog,
+  },
   methods: {
     toggleForm() {
       this.isLogin = !this.isLogin;
     },
-    handleLogin() {
-      this.$refs.loginFormRef.validate((valid) => {
+    async handleLogin() {
+      this.$refs.loginFormRef.validate(async (valid) => {
         if (valid) {
-          // 登录逻辑
-          alert("登录成功！");
-        } else {
-          console.log("登录表单验证失败");
+          try {
+            const res = await userLoginService({
+              username: this.loginForm.username,
+              password: this.loginForm.password,
+            });
+
+            ElMessage.success("登录成功");
+
+            if (this.rememberMe) {
+              localStorage.setItem("token", res.data.token);
+            } else {
+              sessionStorage.setItem("token", res.data.token);
+            }
+
+            // 关闭登录框
+            this.visible = false;
+
+            // 跳转到首页
+            this.$router.push("/home");
+          } catch (error) {
+            console.error("登录失败:", error);
+            ElMessage.error(error.message || "登录失败");
+          }
         }
       });
     },
-    handleRegister() {
-      this.$refs.registerFormRef.validate((valid) => {
+    async handleRegister() {
+      this.$refs.registerFormRef.validate(async (valid) => {
         if (valid) {
-          // 注册逻辑
-          alert("注册成功！");
-        } else {
-          console.log("注册表单验证失败");
+          try {
+            // 调用注册接口
+            await userRegisterService(this.registerForm);
+            ElMessage.success("注册成功");
+
+            // 切换到登录表单
+            this.isLogin = true;
+            this.$refs.registerFormRef.resetFields();
+          } catch (error) {
+            console.error("注册失败:", error);
+            ElMessage.error(error.message || "注册失败");
+          }
         }
       });
     },
     getCaptcha() {
       alert("验证码已发送！");
     },
+    handleForgotPassword() {
+      this.$refs.forgotPasswordRef.visible = true;
+    },
   },
 };
 </script>  
   
-  <style scoped>
-h3 {
+<style scoped>
+.cover {
+  background: linear-gradient(to bottom, #e3fdff, #f4fdfd);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+h2 {
   margin-bottom: 20px;
   text-align: center;
+}
+img {
+  width: 50px;
+  height: 50px;
+  display: block;
+  margin: 0 auto;
+}
+p {
+  text-align: center;
+}
+.under-pwd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 </style>
