@@ -1,12 +1,10 @@
 //导入vue-router
 import { createRouter, createWebHistory } from 'vue-router'
 //导入组件
-import LoginVue from '@/views/Login.vue'
 import HomeVue from '@/views/Home.vue'
 
 //定义路由关系
 const routes = [
-    { path: '/login', component: LoginVue },
     { path: '/home', component: HomeVue }
 ]
 

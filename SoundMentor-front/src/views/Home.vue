@@ -1,192 +1,210 @@
-<script setup>
-import { ref } from "vue";
-import { ElMessage } from "element-plus";
-
-const roomId = ref("");
-const isMicOn = ref(true);
-const isCameraOn = ref(true);
-const isSharing = ref(false);
-
-// 参会者列表
-const participants = ref([
-  { id: 1, name: "张三", isSpeaking: true, hasCamera: true, hasMic: true },
-  { id: 2, name: "李四", isSpeaking: false, hasCamera: true, hasMic: false },
-]);
-
-// 创建会议
-const createMeeting = () => {
-  ElMessage.success("创建会议成功");
-  // 这里添加创建会议的逻辑
-};
-
-// 加入会议
-const joinMeeting = () => {
-  if (!roomId.value) {
-    ElMessage.warning("请输入会议号");
-    return;
-  }
-  ElMessage.success("加入会议成功");
-  // 这里添加加入会议的逻辑
-};
-
-// 控制设备
-const toggleMic = () => {
-  isMicOn.value = !isMicOn.value;
-};
-
-const toggleCamera = () => {
-  isCameraOn.value = !isCameraOn.value;
-};
-
-const toggleScreenShare = () => {
-  isSharing.value = !isSharing.value;
-};
-</script>
-
 <template>
-  <div class="meeting-container">
-    <div class="meeting-header">
-      <div class="meeting-controls">
-        <el-button-group>
-          <el-button :type="isMicOn ? 'primary' : 'info'" @click="toggleMic">
-            <el-icon><Microphone /></el-icon>
-          </el-button>
-          <el-button
-            :type="isCameraOn ? 'primary' : 'info'"
-            @click="toggleCamera"
-          >
-            <el-icon><VideoCamera /></el-icon>
-          </el-button>
-          <el-button
-            :type="isSharing ? 'primary' : 'info'"
-            @click="toggleScreenShare"
-          >
-            <el-icon><Share /></el-icon>
-          </el-button>
-        </el-button-group>
+  <div class="container">
+    <el-header class="header">
+      <div class="logo">
+        <img class="logo-img" src="../assets/logo.png" alt="logo" />
+        <span class="logo-text">SoundMentor</span>
       </div>
-    </div>
+      <el-menu :default-active="activeIndex" class="menu" mode="horizontal">
+        <el-menu-item index="1">声源技术文档</el-menu-item>
+        <el-menu-item index="2">有声PP材料</el-menu-item>
+        <el-menu-item index="3">预设文档助手</el-menu-item>
+        <el-menu-item index="4">语言学习助手</el-menu-item>
+      </el-menu>
+      <div class="user-actions">
+        <el-button @click="showLoginModal">登录</el-button>
+        <el-button type="primary" @click="showRegisterModal">注册</el-button>
+      </div>
+    </el-header>
+    <login-dialog ref="loginDialog" />
+    <el-main>
+      <div class="hero">
+        <h1>智能语音合成</h1>
+        <p>打造专业的语音转换方案，让学习更生动</p>
+        <el-carousel>
+          <el-carousel-item v-for="item in carouselItems" :key="item.id">
+            <h2>{{ item.title }}</h2>
+          </el-carousel-item>
+        </el-carousel>
+      </div>
 
-    <div class="meeting-content">
-      <div class="meeting-sidebar">
-        <div class="join-section">
-          <el-input v-model="roomId" placeholder="请输入会议号">
-            <template #append>
-              <el-button @click="joinMeeting">加入会议</el-button>
-            </template>
-          </el-input>
-          <el-button type="primary" @click="createMeeting" class="create-btn">
-            创建新会议
-          </el-button>
-        </div>
-
-        <div class="participants-list">
-          <h3>参会者 ({{ participants.length }})</h3>
-          <el-scrollbar height="400px">
-            <div
-              v-for="user in participants"
-              :key="user.id"
-              class="participant-item"
-            >
-              <el-avatar :size="32">{{ user.name.charAt(0) }}</el-avatar>
-              <span class="participant-name">{{ user.name }}</span>
-              <div class="participant-status">
-                <el-icon v-if="user.isSpeaking" color="#67C23A"
-                  ><Microphone
-                /></el-icon>
-                <el-icon v-if="user.hasCamera" color="#409EFF"
-                  ><VideoCamera
-                /></el-icon>
+      <div class="features">
+        <el-row :gutter="20">
+          <el-col v-for="feature in features" :key="feature.title" :span="6">
+            <el-card>
+              <div class="feature-icon">
+                <i :class="feature.icon"></i>
               </div>
-            </div>
-          </el-scrollbar>
-        </div>
+              <h3>{{ feature.title }}</h3>
+              <p>{{ feature.description }}</p>
+            </el-card>
+          </el-col>
+        </el-row>
       </div>
 
-      <div class="video-grid">
-        <div class="video-placeholder">
-          <el-empty description="等待加入会议..." />
-        </div>
+      <div class="statistics">
+        <el-row :gutter="20">
+          <el-col v-for="(stat, index) in statistics" :key="index" :span="6">
+            <div class="statistiс">
+              <h2>{{ stat.value }}</h2>
+              <p>{{ stat.label }}</p>
+            </div>
+          </el-col>
+        </el-row>
       </div>
-    </div>
+    </el-main>
+
+    <el-footer class="footer">
+      <div class="footer-info">
+        <h3>关于我们</h3>
+        <p>致力于提供优质的声音处理解决方案，推动音频技术的发展。</p>
+      </div>
+      <div class="contact-info">
+        <h3>联系我们</h3>
+        <p>邮箱: support@example.com</p>
+        <p>电话: 400-123-4567</p>
+      </div>
+    </el-footer>
   </div>
-</template>
+</template>  
+
+<script>
+import { ref } from "vue";
+import loginDialog from "../components/LoginDialog.vue";
+export default {
+  components: {
+    loginDialog,
+  },
+  data() {
+    return {
+      activeIndex: "1",
+      carouselItems: [
+        { id: 1, title: "AI语音助手" },
+        { id: 2, title: "音频处理技术" },
+      ],
+      features: [
+        {
+          title: "声音技术文档",
+          description: "详细的声音技术资料，以助于理解。",
+          icon: "el-icon-mic",
+        },
+        {
+          title: "有声PP资料",
+          description: "专业的有声资料库，供学习使用。",
+          icon: "el-icon-document",
+        },
+        {
+          title: "预设文档助手",
+          description: "高效的文档助手，快速生成所需资料。",
+          icon: "el-icon-time",
+        },
+        {
+          title: "语言学习助手",
+          description: "多种语言学习助手，提升学习效果。",
+          icon: "el-icon-chat-dot-square",
+        },
+      ],
+      statistics: [
+        { value: "10,000+", label: "注册用户" },
+        { value: "50,000+", label: "文档阅读" },
+        { value: "98%", label: "用户满意度" },
+        { value: "24/7", label: "客服支持" },
+      ],
+    };
+  },
+  methods: {
+    showLoginModal() {
+      this.$refs.loginDialog.visible = true;
+      this.$refs.loginDialog.isLogin = true; // 显示登录表单
+    },
+    showRegisterModal() {
+      this.$refs.loginDialog.visible = true;
+      this.$refs.loginDialog.isLogin = false; // 显示注册表单
+    },
+  },
+};
+</script>  
 
 <style scoped>
-.meeting-container {
-  height: 100vh;
+.container {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
-.meeting-header {
-  padding: 16px;
-  background-color: #fff;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.meeting-content {
-  flex: 1;
+.header {
   display: flex;
-  background-color: #f5f7fa;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  background-color: #f5f5f5;
 }
 
-.meeting-sidebar {
-  width: 300px;
-  background-color: #fff;
-  border-right: 1px solid #ebeef5;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: white;
+  padding: 10px;
+}
+.logo-img {
+  width: 40px;
+  height: 40px;
+}
+.logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #4cd4dc;
+}
+
+.menu {
+  flex-grow: 1;
+}
+.menu :deep(.el-menu-item):hover {
+  color: #4cd4dc !important;
+}
+
+.menu :deep(.el-menu-item)::after {
+  background-color: #4cd4dc !important;
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.hero {
+  text-align: center;
+  padding: 50px 0;
+  background-color: #e0e0e0;
+}
+
+.features {
   padding: 20px;
 }
 
-.join-section {
-  margin-bottom: 20px;
+.feature-icon {
+  font-size: 40px;
+  text-align: center;
 }
 
-.create-btn {
-  margin-top: 10px;
-  width: 100%;
+.statistics {
+  padding: 30px 0;
+  background-color: #f9f9f9;
 }
 
-.participants-list h3 {
-  margin-bottom: 16px;
+.statistiс {
+  text-align: center;
 }
 
-.participant-item {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-.participant-item：hover {
-  background-color: #f5f7fa;
-}
-
-.participant-name {
-  margin-left: 12px;
-  flex: 1;
-}
-
-.participant-status {
-  display: flex;
-  gap: 8px;
-}
-
-.video-grid {
-  flex: 1;
+.footer {
+  background-color: #f5f5f5;
   padding: 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  overflow: auto;
+  text-align: center;
 }
 
-.video-placeholder {
-  background-color: #fff;
-  border-radius: 8px;
-  aspect-ratio: 16/9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.footer-info,
+.contact-info {
+  margin: 10px 0;
 }
 </style>
