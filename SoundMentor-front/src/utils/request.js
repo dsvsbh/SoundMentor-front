@@ -24,5 +24,15 @@ instance.interceptors.response.use(
         return Promise.reject(err);//异步的状态转化成失败的状态
     }
 )
+//添加请求拦截器
+instance.interceptors.request.use(config => {
+    // 从 localStorage 获取 token
+    const token = localStorage.getItem('token')
+    // 如果有 token 则添加到请求头
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+})
 
 export default instance;

@@ -9,25 +9,19 @@
       ref="forgotFormRef"
       :model="forgotForm"
       :rules="rules"
-      label-width="80px"
+      class="forgot-form"
     >
-      <el-form-item label="账号" prop="username">
-        <el-input
-          v-model="forgotForm.username"
-          placeholder="请输入账号"
-        ></el-input>
+      <el-form-item prop="username">
+        <el-input v-model="forgotForm.username" placeholder="账号"></el-input>
       </el-form-item>
-      <el-form-item label="邮箱" prop="email">
-        <el-input
-          v-model="forgotForm.email"
-          placeholder="请输入邮箱"
-        ></el-input>
+      <el-form-item prop="email">
+        <el-input v-model="forgotForm.email" placeholder="邮箱"></el-input>
       </el-form-item>
-      <el-form-item label="验证码" prop="code">
+      <el-form-item prop="code">
         <div style="display: flex; gap: 10px">
           <el-input
             v-model="forgotForm.code"
-            placeholder="请输入验证码"
+            placeholder="输入验证码"
           ></el-input>
           <el-button
             type="primary"
@@ -38,7 +32,7 @@
           </el-button>
         </div>
       </el-form-item>
-      <el-form-item label="手机号" prop="phone">
+      <el-form-item prop="phone">
         <el-input
           v-model="forgotForm.phone"
           placeholder="请输入11位手机号"
@@ -47,7 +41,7 @@
           <template #prepend>+86</template>
         </el-input>
       </el-form-item>
-      <el-form-item label="新密码" prop="password">
+      <el-form-item prop="password">
         <el-input
           v-model="forgotForm.password"
           type="password"
@@ -55,19 +49,26 @@
           show-password
         ></el-input>
       </el-form-item>
+      <el-form-item prop="confirmPassword">
+        <el-input
+          v-model="forgotForm.confirmPassword"
+          type="password"
+          placeholder="请确认新密码"
+          show-password
+        ></el-input>
+      </el-form-item>
     </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="visible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确认</el-button>
-      </span>
-    </template>
+    <span class="dialog-footer">
+      <el-button type="primary" @click="handleSubmit">确认</el-button>
+      <el-button @click="visible = false">取消</el-button>
+    </span>
   </el-dialog>
 </template>
   
   <script>
 import { ref, reactive } from "vue";
 import { ElMessage } from "element-plus";
+import request from "@/utils/request";
 
 export default {
   name: "ForgotPasswordDialog",
@@ -76,6 +77,9 @@ export default {
     const forgotFormRef = ref(null);
     const countDown = ref(0);
     const isCountingDown = ref(false);
+    const handleForgotPassword = () => {
+      visible.value = true;
+    };
 
     const forgotForm = reactive({
       username: "",
@@ -83,6 +87,7 @@ export default {
       code: "",
       phone: "",
       password: "",
+      confirmPassword: "",
     });
 
     const rules = {
@@ -112,6 +117,19 @@ export default {
           trigger: "blur",
         },
       ],
+      confirmPassword: [
+        { required: true, message: "请确认新密码", trigger: "blur" },
+        {
+          validator: (rule, value, callback) => {
+            if (value !== forgotForm.password) {
+              callback(new Error("两次输入的密码不一致"));
+            } else {
+              callback();
+            }
+          },
+          trigger: "blur",
+        },
+      ],
     };
 
     const countDownText = ref("获取验证码");
@@ -131,13 +149,39 @@ export default {
     };
 
     const getVerificationCode = async () => {
-      if (!forgotForm.email) {
-        ElMessage.warning("请先输入邮箱");
+      if (!forgotForm.username || !forgotForm.email || !forgotForm.phone) {
+        ElMessage.warning("请先完整填写账号、邮箱和手机号");
         return;
       }
-      // TODO: 调用发送验证码接口
-      startCountDown();
-      ElMessage.success("验证码已发送到您的邮箱");
+
+      // 验证邮箱格式
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(forgotForm.email)) {
+        ElMessage.warning("请输入正确的邮箱格式");
+        return;
+      }
+
+      // 验证手机号格式
+      const phoneRegex = /^1[3-9]\d{9}$/;
+      if (!phoneRegex.test(forgotForm.phone)) {
+        ElMessage.warning("请输入正确的手机号格式");
+        return;
+      }
+
+      try {
+        await request({
+          url: "/user/sendEmail",
+          method: "post",
+          data: {
+            email: forgotForm.email,
+          },
+        });
+
+        startCountDown();
+        ElMessage.success("验证码已发送到您的邮箱");
+      } catch (error) {
+        ElMessage.error(error.message || "验证码发送失败");
+      }
     };
 
     const handleSubmit = () => {
@@ -164,6 +208,7 @@ export default {
       countDownText,
       getVerificationCode,
       handleSubmit,
+      handleForgotPassword,
     };
   },
 };
@@ -174,18 +219,32 @@ export default {
   background: linear-gradient(to bottom, #e3fdff, #f4fdfd);
   padding: 20px;
   margin-bottom: 20px;
+  margin: 0 20px 20px 20px;
 }
-h2 {
+.cover h2 {
   margin-bottom: 20px;
   text-align: center;
 }
-img {
+.cover img {
   width: 50px;
   height: 50px;
   display: block;
   margin: 0 auto;
 }
-p {
+.cover p {
   text-align: center;
+}
+.forgot-form {
+  margin: 0 20px 20px 20px;
+}
+.dialog-footer {
+  margin: 0 auto;
+  padding: 0 20px 0 20px;
+  margin-top: -15px;
+  display: flex;
+  justify-content: space-between;
+}
+.dialog-footer button {
+  width: 200px;
 }
 </style>

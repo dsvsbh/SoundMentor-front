@@ -1,21 +1,7 @@
 <template>
   <div class="container">
-    <el-header class="header">
-      <div class="logo">
-        <img class="logo-img" src="../assets/logo.png" alt="logo" />
-        <span class="logo-text">SoundMentor</span>
-      </div>
-      <el-menu :default-active="activeIndex" class="menu" mode="horizontal">
-        <el-menu-item index="1">声源技术文档</el-menu-item>
-        <el-menu-item index="2">有声PPT材料</el-menu-item>
-        <el-menu-item index="3">预设文档助手</el-menu-item>
-        <el-menu-item index="4">语言学习助手</el-menu-item>
-        <el-menu-item index="5" @click="showLoginModal">登录</el-menu-item>
-        <el-menu-item index="6" @click="showRegisterModal">注册</el-menu-item>
-      </el-menu>
-    </el-header>
     <login-dialog ref="loginDialog" />
-    <el-main>
+    <el-main style="">
       <div class="hero">
         <el-carousel>
           <el-carousel-item v-for="item in carouselItems" :key="item.id">
@@ -28,7 +14,7 @@
       </div>
 
       <div class="features">
-        <el-row :gutter="20">
+        <el-row :gutter="24">
           <el-col v-for="feature in features" :key="feature.title" :span="12">
             <el-card
               class="feature-card"
@@ -38,7 +24,7 @@
             >
               <div class="feature-content">
                 <div class="feature-icon">
-                  <el-icon>
+                  <el-icon size="75">
                     <component :is="feature.icon" />
                   </el-icon>
                 </div>
@@ -49,7 +35,6 @@
           </el-col>
         </el-row>
       </div>
-
       <div class="statistics">
         <el-row :gutter="20">
           <el-col v-for="(stat, index) in statistics" :key="index" :span="6">
@@ -65,33 +50,30 @@
     <el-footer class="footer">
       <div class="footer-container">
         <div class="footer-content">
-          <!-- 关于我们 -->
-          <el-row :gutter="10">
-            <el-col :span="8">
+          <el-row :gutter="10" style="width: 1100px">
+            <!-- 关于我们 -->
+            <el-col :span="6">
               <div class="footer-section">
-                <h3>关于我们</h3>
-                <p>专注于教育领域的人工智能技术</p>
-                <p>为教育工作者提供专业的语言解决方案</p>
-                <p>打造智能化教学辅助工具</p>
+                <h3>{{ footerData.about.title }}</h3>
+                <p v-for="(item, index) in footerData.about.items" :key="index">
+                  {{ item }}
+                </p>
               </div>
             </el-col>
 
             <!-- 产品服务 -->
             <el-col :span="5">
               <div class="footer-section">
-                <h3>产品服务</h3>
+                <h3>{{ footerData.services.title }}</h3>
                 <ul>
-                  <li>
-                    <el-icon><Microphone color="#79b2ff" /></el-icon> 声音样本库
-                  </li>
-                  <li>
-                    <el-icon><Document color="#79b2ff" /></el-icon> 有声PPT制作
-                  </li>
-                  <li>
-                    <el-icon><Reading color="#79b2ff" /></el-icon> 预览文本朗读
-                  </li>
-                  <li>
-                    <el-icon><School color="#79b2ff" /></el-icon> 语言学习辅助
+                  <li
+                    v-for="(item, index) in footerData.services.items"
+                    :key="index"
+                  >
+                    <el-icon color="#79b2ff">
+                      <component :is="item.icon" />
+                    </el-icon>
+                    {{ item.text }}
                   </li>
                 </ul>
               </div>
@@ -100,34 +82,33 @@
             <!-- 联系我们 -->
             <el-col :span="8">
               <div class="footer-section">
-                <h3>联系我们</h3>
-                <p>
-                  <el-icon><Message color="#79b2ff" /></el-icon>
-                  邮箱：support@example.com
-                </p>
-                <p>
-                  <el-icon><Phone color="#79b2ff" /></el-icon>
-                  电话：400-123-4567
-                </p>
-                <p>
-                  <el-icon><Location color="#79b2ff" /></el-icon>
-                  地址：北京市海淀区XX路XX号
+                <h3>{{ footerData.contact.title }}</h3>
+                <p
+                  v-for="(item, index) in footerData.contact.items"
+                  :key="index"
+                >
+                  <el-icon color="#79b2ff">
+                    <component :is="item.icon" />
+                  </el-icon>
+                  {{ item.text }}
                 </p>
               </div>
             </el-col>
 
             <!-- 关注我们 -->
-            <el-col :span="3">
+            <el-col :span="5">
               <div class="footer-section">
-                <h3>关注我们</h3>
+                <h3>{{ footerData.social.title }}</h3>
                 <div class="social-links">
-                  <div class="social-item">
-                    <el-image src="@/assets/wechat-qr.png" fit="cover" />
-                    <p>官方微信</p>
-                  </div>
-                  <div class="social-item">
-                    <el-image src="@/assets/weibo-qr.png" fit="cover" />
-                    <p>官方微博</p>
+                  <div
+                    v-for="(item, index) in footerData.social.items"
+                    :key="index"
+                    class="social-item"
+                  >
+                    <el-icon color="#79b2ff">
+                      <component :is="item.icon" />
+                    </el-icon>
+                    <p>{{ item.text }}</p>
                   </div>
                 </div>
               </div>
@@ -150,7 +131,9 @@ import {
   Microphone,
   Document,
   Reading,
-  School,
+  Cellphone,
+  ChatLineRound,
+  ChatRound,
   Message,
   Phone,
   Location,
@@ -199,7 +182,7 @@ export default {
         {
           title: "语言学习助手",
           description: "多种语言学习助手，提升学习效果。",
-          icon: School,
+          icon: Cellphone,
         },
       ],
       statistics: [
@@ -208,6 +191,40 @@ export default {
         { value: "98%", label: "用户满意度" },
         { value: "24/7", label: "客服支持" },
       ],
+      footerData: {
+        about: {
+          title: "关于我们",
+          items: [
+            "专注于教育领域的人工智能技术",
+            "为教育工作者提供专业的语言解决方案",
+            "打造智能化教学辅助工具",
+          ],
+        },
+        services: {
+          title: "产品服务",
+          items: [
+            { icon: Microphone, text: "声音样本库" },
+            { icon: Document, text: "有声PPT制作" },
+            { icon: Reading, text: "预览文本朗读" },
+            { icon: Cellphone, text: "语言学习辅助" },
+          ],
+        },
+        contact: {
+          title: "联系我们",
+          items: [
+            { icon: Message, text: "邮箱：support@example.com" },
+            { icon: Phone, text: "电话：400-123-4567" },
+            { icon: Location, text: "地址：北京市海淀区XX路XX号" },
+          ],
+        },
+        social: {
+          title: "关注我们",
+          items: [
+            { icon: ChatLineRound, text: "官方微信" },
+            { icon: ChatRound, text: "官方微博" },
+          ],
+        },
+      },
     };
   },
   methods: {
@@ -231,43 +248,6 @@ export default {
   padding: 0;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f5f5f5;
-  padding: 0 20px;
-  width: 100%;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background-color: white;
-  padding: 10px;
-}
-.logo-img {
-  width: 40px;
-  height: 40px;
-}
-.logo-text {
-  font-size: 24px;
-  font-weight: bold;
-  color: #4cd4dc;
-}
-
-.menu {
-  flex-grow: 1;
-}
-.menu :deep(.el-menu-item):hover {
-  color: #4cd4dc !important;
-}
-
-.menu :deep(.el-menu-item)::after {
-  background-color: #4cd4dc !important;
-}
-
 .user-actions {
   display: flex;
   gap: 10px;
@@ -276,6 +256,7 @@ export default {
 .hero {
   text-align: center;
   padding: 25px 0;
+  padding-bottom: 0;
   background-color: #f5f7fa;
   height: 500px;
 }
@@ -308,9 +289,10 @@ export default {
   align-items: center;
 }
 
-.el-row {
+.feature-card el-row {
+  display: flex;
+  justify-content: center;
   margin-bottom: 20px;
-  max-width: 1100px;
 }
 
 .feature-card {
@@ -320,9 +302,10 @@ export default {
   cursor: pointer;
   margin-bottom: 20px;
   height: 300px;
-  width: 450px;
+  width: 500px;
   margin-left: auto;
   margin-right: auto;
+  border-radius: 10px;
 }
 
 .feature-card.hover {
@@ -354,13 +337,12 @@ export default {
 
 .statistics {
   padding: 30px 0;
-  background-color: #ffffff;
+  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
   margin: 0 auto;
-  max-width: 1000px;
+  max-width: 1200px;
   display: flex;
   justify-content: space-around;
-  /* align-items: center; */
-  border-radius: 5px;
+  border-radius: 10px;
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
 }
 

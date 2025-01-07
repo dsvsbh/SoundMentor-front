@@ -6,26 +6,31 @@
         <h2>SoundMentor</h2>
         <p>智能语言教学的引领者</p>
       </div>
-      <el-form :model="loginForm" ref="loginFormRef">
+      <el-form :model="loginForm" ref="loginFormRef" style="margin: 0 20px">
         <el-form-item
-          label="账号"
           prop="username"
           :rules="[{ required: true, message: '请输入账号', trigger: 'blur' }]"
         >
-          <el-input v-model="loginForm.username" />
+          <el-input v-model="loginForm.username" placeholder="账户" />
         </el-form-item>
         <el-form-item
-          label="密码"
           prop="password"
           :rules="[{ required: true, message: '请输入密码', trigger: 'blur' }]"
         >
-          <el-input v-model="loginForm.password" type="password" />
+          <el-input
+            v-model="loginForm.password"
+            type="password"
+            placeholder="密码"
+          />
         </el-form-item>
         <div class="under-pwd">
           <el-form-item style="margin-bottom: 0">
             <el-checkbox v-model="rememberMe">自动登录</el-checkbox>
           </el-form-item>
-          <a href="javascript:void(0)" @click="handleForgotPassword"
+          <a
+            href="javascript:void(0)"
+            @click="handleForgotPassword"
+            style="color: #409eff; text-decoration: none"
             >忘记密码</a
           >
         </div>
@@ -40,70 +45,99 @@
             @click="handleLogin"
             >登录</el-button
           >
-          <a href="javascript:void(0)" @click="toggleForm">注册账号</a>
+          <div class="under-login">
+            <div class="left">
+              <a href="" style="color: #9a9a9a">帮助</a>
+              <a href="" style="color: #9a9a9a">隐私</a>
+              <a href="" style="color: #9a9a9a">条款</a>
+            </div>
+            <div class="right">
+              <a href="javascript:void(0)" @click="toggleForm">注册账号</a>
+            </div>
+          </div>
         </el-form-item>
       </el-form>
     </div>
-    <div v-else>
+    <div class="register" v-else>
       <div class="cover">
         <img src="../assets/logo.png" alt="logo" />
         <h2>SoundMentor</h2>
         <p>智能语言教学的引领者</p>
       </div>
-      <h3>注册账号</h3>
-      <el-form :model="registerForm" ref="registerFormRef">
+
+      <el-form
+        :model="registerForm"
+        ref="registerFormRef"
+        style="margin: 0 20px"
+      >
+        <h3>注册</h3>
         <el-form-item
-          label="用户名"
           prop="username"
           :rules="[
             { required: true, message: '请输入用户名', trigger: 'blur' },
           ]"
         >
-          <el-input v-model="registerForm.username" />
+          <el-input v-model="registerForm.username" placeholder="用户名" />
         </el-form-item>
         <el-form-item
-          label="账号"
           prop="account"
           :rules="[{ required: true, message: '请输入账号', trigger: 'blur' }]"
         >
-          <el-input v-model="registerForm.account" />
+          <el-input v-model="registerForm.account" placeholder="账号" />
         </el-form-item>
         <el-form-item
-          label="邮箱"
           prop="email"
           :rules="[{ required: true, message: '请输入邮箱', trigger: 'blur' }]"
         >
-          <el-input v-model="registerForm.email" />
+          <el-input v-model="registerForm.email" placeholder="邮箱" />
         </el-form-item>
         <el-form-item
-          label="验证码"
           prop="captcha"
           :rules="[
             { required: true, message: '请输入验证码', trigger: 'blur' },
           ]"
         >
-          <el-input v-model="registerForm.captcha" />
-          <el-button @click="getCaptcha">获取验证码</el-button>
+          <div style="display: flex; gap: 10px">
+            <el-input
+              v-model="registerForm.captcha"
+              placeholder="验证码"
+              style="width: 215px"
+            />
+            <el-button @click="getCaptcha" style="float: right"
+              >获取验证码</el-button
+            >
+          </div>
         </el-form-item>
         <el-form-item
-          label="手机号码"
           prop="phone"
           :rules="[
             { required: true, message: '请输入手机号码', trigger: 'blur' },
           ]"
         >
-          <el-input v-model="registerForm.phone" placeholder="+86" />
+          <el-input v-model="registerForm.phone" placeholder="11位手机号"
+            ><template #prepend>+86</template>
+          </el-input>
         </el-form-item>
         <el-form-item
-          label="密码"
           prop="password"
           :rules="[{ required: true, message: '请输入密码', trigger: 'blur' }]"
         >
-          <el-input v-model="registerForm.password" type="password" />
+          <el-input
+            v-model="registerForm.password"
+            type="password"
+            placeholder="密码"
+          />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleRegister">注册</el-button>
-          <el-button @click="toggleForm">返回登录</el-button>
+          <el-button type="primary" @click="handleRegister" style="width: 155px"
+            >注册</el-button
+          >
+          <a
+            href="javascript:void(0)"
+            @click="toggleForm"
+            style="margin-left: 55px; color: #409eff; text-decoration: none"
+            >使用已有账户登录</a
+          >
         </el-form-item>
       </el-form>
     </div>
@@ -220,6 +254,7 @@ export default {
   background: linear-gradient(to bottom, #e3fdff, #f4fdfd);
   padding: 20px;
   margin-bottom: 20px;
+  margin: 0 20px 20px 20px;
 }
 h2 {
   margin-bottom: 20px;
@@ -239,5 +274,27 @@ p {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+.under-login {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.under-login .left {
+  float: left;
+  justify-content: space-around;
+}
+
+.under-login .right {
+  float: right;
+  padding-left: 147px;
+}
+
+.under-login a {
+  text-decoration: none;
+  color: #1890ff;
+  margin: 0 5px;
+  width: 40px;
 }
 </style>
