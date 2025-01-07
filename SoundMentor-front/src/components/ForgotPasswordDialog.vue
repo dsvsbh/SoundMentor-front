@@ -5,15 +5,13 @@
       <h2>SoundMentor</h2>
       <p>智能语言教学的引领者</p>
     </div>
+    <h3 style="margin-left: 20px">忘记密码</h3>
     <el-form
       ref="forgotFormRef"
       :model="forgotForm"
       :rules="rules"
       class="forgot-form"
     >
-      <el-form-item prop="username">
-        <el-input v-model="forgotForm.username" placeholder="账号"></el-input>
-      </el-form-item>
       <el-form-item prop="email">
         <el-input v-model="forgotForm.email" placeholder="邮箱"></el-input>
       </el-form-item>
@@ -22,6 +20,7 @@
           <el-input
             v-model="forgotForm.code"
             placeholder="输入验证码"
+            style="width: 215px"
           ></el-input>
           <el-button
             type="primary"
@@ -58,7 +57,7 @@
         ></el-input>
       </el-form-item>
     </el-form>
-    <span class="dialog-footer">
+    <span class="dialog-footer" style="margin: 20px 0">
       <el-button type="primary" @click="handleSubmit">确认</el-button>
       <el-button @click="visible = false">取消</el-button>
     </span>
@@ -82,7 +81,6 @@ export default {
     };
 
     const forgotForm = reactive({
-      username: "",
       email: "",
       code: "",
       phone: "",
@@ -91,7 +89,6 @@ export default {
     });
 
     const rules = {
-      username: [{ required: true, message: "请输入账号", trigger: "blur" }],
       email: [
         { required: true, message: "请输入邮箱", trigger: "blur" },
         { type: "email", message: "请输入正确的邮箱格式", trigger: "blur" },
@@ -149,8 +146,8 @@ export default {
     };
 
     const getVerificationCode = async () => {
-      if (!forgotForm.username || !forgotForm.email || !forgotForm.phone) {
-        ElMessage.warning("请先完整填写账号、邮箱和手机号");
+      if (!forgotForm.email || !forgotForm.phone) {
+        ElMessage.warning("请先完整填写邮箱和手机号");
         return;
       }
 

@@ -6,7 +6,9 @@
         <h2>SoundMentor</h2>
         <p>智能语言教学的引领者</p>
       </div>
+
       <el-form :model="loginForm" ref="loginFormRef" style="margin: 0 20px">
+        <h3>账户登录</h3>
         <el-form-item
           prop="username"
           :rules="[{ required: true, message: '请输入账号', trigger: 'blur' }]"
@@ -70,7 +72,7 @@
         ref="registerFormRef"
         style="margin: 0 20px"
       >
-        <h3>注册</h3>
+        <h3>用户注册</h3>
         <el-form-item
           prop="username"
           :rules="[
@@ -239,8 +241,20 @@ export default {
         }
       });
     },
-    getCaptcha() {
-      alert("验证码已发送！");
+    async getCaptcha() {
+      // 验证邮箱是否已填写
+      if (!this.registerForm.email) {
+        ElMessage.warning("请先填写邮箱");
+        return;
+      }
+
+      try {
+        await sendEmailService(this.registerForm.email);
+        ElMessage.success("验证码已发送到您的邮箱");
+      } catch (error) {
+        console.error("发送验证码失败:", error);
+        ElMessage.error(error.message || "发送验证码失败");
+      }
     },
     handleForgotPassword() {
       this.$refs.forgotPasswordRef.visible = true;
