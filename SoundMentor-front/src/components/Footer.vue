@@ -135,7 +135,7 @@ export default {
 }
 .footer {
   background-color: var(--el-bg-color);
-  height: 300px;
+  height: 330px;
   padding: 40px 0 20px;
   border-top: 1px solid var(--el-border-color-lighter);
   width: 100%;
@@ -197,5 +197,7 @@ export default {
   text-align: center;
   color: var(--el-text-color-secondary);
   border-top: 1px solid var(--el-border-color-lighter);
+  height: 50px;
+  padding-bottom: 10px;
 }
 </style> 

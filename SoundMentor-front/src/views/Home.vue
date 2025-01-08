@@ -22,6 +22,7 @@
               :class="{ hover: feature.isHovered }"
               @mouseenter="feature.isHovered = true"
               @mouseleave="feature.isHovered = false"
+              @click="handleFeatureClick(feature.path)"
             >
               <div class="feature-content">
                 <div class="feature-icon">

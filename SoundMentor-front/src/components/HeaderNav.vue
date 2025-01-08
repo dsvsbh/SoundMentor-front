@@ -15,30 +15,33 @@
       <el-menu-item index="/ppt">有声PPT制作</el-menu-item>
       <el-menu-item index="/assistant">预设文本朗读</el-menu-item>
       <el-menu-item index="/language">语言学习辅助</el-menu-item>
-      <template v-if="!isLoggedIn">
-        <el-menu-item index="" @click="showLoginModal">
-          <el-icon><User /></el-icon>
-          登录
-        </el-menu-item>
-        <el-menu-item index="" @click="showRegisterModal">
-          <el-icon><Plus /></el-icon>
-          注册
-        </el-menu-item>
-      </template>
-      <el-menu-item index="" v-else>
-        <el-dropdown trigger="click" @command="handleCommand">
-          <span class="user-dropdown">
+
+      <div class="menu-right">
+        <template v-if="!isLoggedIn">
+          <el-menu-item index="" @click="showLoginModal">
             <el-icon><User /></el-icon>
-            {{ username }}
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile">个人信息</el-dropdown-item>
-              <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </el-menu-item>
+            登录
+          </el-menu-item>
+          <el-menu-item index="" @click="showRegisterModal">
+            <el-icon><Plus /></el-icon>
+            注册
+          </el-menu-item>
+        </template>
+        <el-menu-item index="" v-else>
+          <el-dropdown trigger="click" @command="handleCommand">
+            <span class="user-dropdown">
+              <el-icon><User /></el-icon>
+              {{ username }}
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="profile">个人信息</el-dropdown-item>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </el-menu-item>
+      </div>
     </el-menu>
     <login-dialog ref="loginDialog" />
   </el-header>
@@ -137,6 +140,12 @@ export default {
 
 .menu {
   flex-grow: 1;
+  justify-content: space-between;
+}
+.menu-right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
 }
 
 .menu :deep(.el-menu-item):hover {
