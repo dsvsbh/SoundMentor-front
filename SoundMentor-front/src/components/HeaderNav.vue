@@ -27,31 +27,36 @@
             注册
           </el-menu-item>
         </template>
-        <el-menu-item index="" v-else>
-          <el-dropdown trigger="click" @command="handleCommand">
-            <span class="user-dropdown">
-              <el-icon><User /></el-icon>
-              {{ username }}
+        <template v-else>
+          <el-menu-item index="">
+            <el-icon><User /></el-icon>
+            <span @click="handleCommand('profile')">
+              {{ username ? username : "用户" }}
             </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人信息</el-dropdown-item>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </el-menu-item>
+          </el-menu-item>
+          <el-menu-item index="">
+            <el-icon><Setting /></el-icon>
+            <span>设置</span>
+          </el-menu-item>
+          <el-menu-item index="" @click="handleCommand('logout')">
+            <el-icon><Close /></el-icon>
+            <span>退出登录</span>
+          </el-menu-item>
+        </template>
       </div>
     </el-menu>
     <login-dialog ref="loginDialog" />
   </el-header>
-</template>
+</template>  
 
 <script>
-import { ref, computed } from "vue";
-import { User, Plus } from "@element-plus/icons-vue";
+import { ref, computed, onMounted } from "vue";
+import { User, Plus, Setting, Close } from "@element-plus/icons-vue";
 import loginDialog from "./LoginDialog.vue";
 import { useUserStore } from "../stores/user";
+import { logoutService } from "../api/user";
+import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
 
 export default {
   name: "HeaderNav",
@@ -59,30 +64,51 @@ export default {
     loginDialog,
     User,
     Plus,
+    Setting,
+    Close,
   },
   setup() {
     const store = useUserStore();
     const activeIndex = ref(location.pathname);
-
+    const router = useRouter();
     const isLoggedIn = computed(() => store.isLoggedIn);
     const username = computed(() => store.username);
 
-    const handleSelect = (index) => {
-      if (index === "") {
-        activeIndex.value = location.pathname;
-      } else {
-        activeIndex.value = index;
+    onMounted(() => {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (userInfo) {
+        store.setLoginStatus(true);
+        store.setUsername(userInfo.username);
       }
+      console.log("isLoggedIn:", store.isLoggedIn, "username:", store.username);
+    });
+
+    const handleSelect = (index) => {
+      activeIndex.value = index || location.pathname;
     };
 
-    const handleCommand = (command) => {
+    const handleCommand = async (command) => {
+      console.log("Command received:", command);
       switch (command) {
         case "profile":
           router.push("/profile");
           break;
         case "logout":
-          store.logout();
+          await handleLogout();
           break;
+      }
+    };
+
+    const handleLogout = async () => {
+      try {
+        await logoutService(); // 调用登出接口
+        localStorage.removeItem("token");
+        localStorage.removeItem("userInfo");
+        store.logout(); // 更新状态
+        ElMessage.success("成功退出登录");
+      } catch (error) {
+        console.error("登出失败:", error);
+        ElMessage.error("登出失败，请重试");
       }
     };
 
@@ -155,11 +181,20 @@ export default {
 .menu :deep(.el-menu-item)::after {
   background-color: #4cd4dc !important;
 }
+.el-menu .el-menu-item {
+  font-size: 18px;
+}
 
 .user-dropdown {
   display: flex;
   align-items: center;
   gap: 5px;
   cursor: pointer;
+}
+
+.headImg {
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
 }
 </style> 

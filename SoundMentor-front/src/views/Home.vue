@@ -92,23 +92,23 @@ export default {
       ],
       features: [
         {
-          title: "声音技术文档",
+          title: "声音样本库",
           description: "详细的声音技术资料，以助于理解。",
           icon: Microphone,
           path: "/docs",
         },
         {
-          title: "有声PP资料",
+          title: "有声PPT制作",
           description: "专业的有声资料库，供学习使用。",
           icon: Document,
         },
         {
-          title: "预设文档助手",
+          title: "预设文本朗读",
           description: "高效的文档助手，快速生成所需资料。",
           icon: Reading,
         },
         {
-          title: "语言学习助手",
+          title: "语言学习辅助",
           description: "多种语言学习助手，提升学习效果。",
           icon: Cellphone,
         },

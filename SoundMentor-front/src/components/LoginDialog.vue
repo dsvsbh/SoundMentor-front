@@ -74,18 +74,18 @@
       >
         <h3>用户注册</h3>
         <el-form-item
-          prop="username"
+          prop="name"
           :rules="[
             { required: true, message: '请输入用户名', trigger: 'blur' },
           ]"
         >
-          <el-input v-model="registerForm.username" placeholder="用户名" />
+          <el-input v-model="registerForm.name" placeholder="用户名" />
         </el-form-item>
         <el-form-item
-          prop="account"
+          prop="username"
           :rules="[{ required: true, message: '请输入账号', trigger: 'blur' }]"
         >
-          <el-input v-model="registerForm.account" placeholder="账号" />
+          <el-input v-model="registerForm.username" placeholder="账号" />
         </el-form-item>
         <el-form-item
           prop="email"
@@ -94,19 +94,21 @@
           <el-input v-model="registerForm.email" placeholder="邮箱" />
         </el-form-item>
         <el-form-item
-          prop="captcha"
+          prop="verifyCode"
           :rules="[
             { required: true, message: '请输入验证码', trigger: 'blur' },
           ]"
         >
           <div style="display: flex; gap: 10px">
             <el-input
-              v-model="registerForm.captcha"
+              v-model="registerForm.verifyCode"
               placeholder="验证码"
               style="width: 215px"
             />
-            <el-button @click="getCaptcha" style="float: right"
-              >获取验证码</el-button
+            <el-button :disabled="isCountingDown" @click="getCaptcha">
+              {{
+                isCountingDown ? `倒计时(${countdown}s)` : "发送验证码"
+              }}</el-button
             >
           </div>
         </el-form-item>
@@ -130,6 +132,28 @@
             placeholder="密码"
           />
         </el-form-item>
+        <el-form-item
+          prop="rePassword"
+          :rules="[
+            { required: true, message: '请确认密码', trigger: 'blur' },
+            {
+              validator: (rule, value, callback) => {
+                if (value !== this.registerForm.password) {
+                  callback(new Error('两次密码不一致'));
+                } else {
+                  callback();
+                }
+              },
+              trigger: 'blur',
+            },
+          ]"
+        >
+          <el-input
+            v-model="registerForm.rePassword"
+            type="password"
+            placeholder="确认密码"
+          />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleRegister" style="width: 155px"
             >注册</el-button
@@ -147,10 +171,11 @@
   </el-dialog>
 </template>  
   
-  <script>
+<script>
 import { userLoginService, userRegisterService } from "@/api/user.js";
 import { ElMessage } from "element-plus";
 import ForgotPasswordDialog from "./ForgotPasswordDialog.vue";
+import { sendEmailService } from "@/api/user.js";
 
 export default {
   props: {
@@ -163,18 +188,22 @@ export default {
   data() {
     return {
       visible: this.modelValue,
+      countdown: 60,
+      timer: null,
+      isCountingDown: false,
       isLogin: true,
       loginForm: {
         username: "",
         password: "",
       },
       registerForm: {
-        username: "",
-        account: "",
+        name: "",
         email: "",
-        captcha: "",
+        verifyCode: "",
         phone: "",
+        username: "",
         password: "",
+        rePassword: "",
       },
       rememberMe: false,
     };
@@ -202,8 +231,11 @@ export default {
               username: this.loginForm.username,
               password: this.loginForm.password,
             });
-
-            ElMessage.success("登录成功");
+            if (res.code == 0) {
+              ElMessage.success("登录成功");
+            } else {
+              ElMessage.error(res.message);
+            }
 
             if (this.rememberMe) {
               localStorage.setItem("token", res.data.token);
@@ -211,11 +243,10 @@ export default {
               sessionStorage.setItem("token", res.data.token);
             }
 
-            // 关闭登录框
             this.visible = false;
-
-            // 跳转到首页
-            this.$router.push("/home");
+            this.$router.push("/").then(() => {
+              window.location.reload();
+            });
           } catch (error) {
             console.error("登录失败:", error);
             ElMessage.error(error.message || "登录失败");
@@ -228,7 +259,14 @@ export default {
         if (valid) {
           try {
             // 调用注册接口
-            await userRegisterService(this.registerForm);
+            await userRegisterService({
+              name: this.registerForm.name,
+              username: this.registerForm.username,
+              email: this.registerForm.email,
+              verifyCode: this.registerForm.verifyCode,
+              phone: this.registerForm.phone,
+              password: this.registerForm.password,
+            });
             ElMessage.success("注册成功");
 
             // 切换到登录表单
@@ -251,10 +289,30 @@ export default {
       try {
         await sendEmailService(this.registerForm.email);
         ElMessage.success("验证码已发送到您的邮箱");
+        this.startCountdown();
       } catch (error) {
         console.error("发送验证码失败:", error);
         ElMessage.error(error.message || "发送验证码失败");
       }
+    },
+
+    startCountdown() {
+      this.isCountingDown = true;
+      this.countdown = 60; // 重置倒计时
+
+      this.timer = setInterval(() => {
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          this.stopCountdown();
+        }
+      }, 1000);
+    },
+
+    stopCountdown() {
+      clearInterval(this.timer);
+      this.isCountingDown = false;
+      this.countdown = 0; // 可选：重置为 0 或者 60
     },
     handleForgotPassword() {
       this.$refs.forgotPasswordRef.visible = true;
