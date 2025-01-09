@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" width="400px">
+  <el-dialog v-model="visible" width="400px" @close="handleClose">
     <div v-if="isLogin">
       <div class="cover">
         <img src="../assets/logo.png" alt="logo" />
@@ -312,10 +312,15 @@ export default {
     stopCountdown() {
       clearInterval(this.timer);
       this.isCountingDown = false;
-      this.countdown = 0; // 可选：重置为 0 或者 60
+      this.countdown = 0;
     },
     handleForgotPassword() {
       this.$refs.forgotPasswordRef.visible = true;
+    },
+    handleClose() {
+      this.visible = false;
+      this.$router.push("/");
+      window.location.reload();
     },
   },
 };

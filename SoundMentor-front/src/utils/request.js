@@ -26,7 +26,10 @@ instance.interceptors.response.use(
         if (result.data.code == 0) {
             return result.data;
         }
-
+        if (result.data.code == '2025009') {
+            ElMessage.error('未登录');
+            return Promise.reject(result.data);
+        }
         ElMessage.error(result.data.message || '服务异常');
         return Promise.reject(result.data);
     },

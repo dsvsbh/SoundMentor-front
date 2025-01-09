@@ -54,7 +54,6 @@
 </template>  
 
 <script>
-import { ref } from "vue";
 import loginDialog from "../components/LoginDialog.vue";
 import Footer from "../components/Footer.vue";
 import {
