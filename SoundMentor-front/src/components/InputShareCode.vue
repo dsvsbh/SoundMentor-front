@@ -38,17 +38,28 @@ export default {
     },
     async confirmJoin() {
       try {
-        const organization = { code: this.shareCode };
-        await joinOrganizationService(organization);
+        const underscoreIndex = this.shareCode.indexOf("-");
+        if (underscoreIndex === -1) {
+          ElMessage.error("输入格式错误，请输入组织ID-邀请码");
+        }
+
+        const organizationId = this.shareCode.substring(0, underscoreIndex);
+        const shareCode = this.shareCode.substring(underscoreIndex + 1);
+
+        const data = {
+          organizationId,
+          shareCode,
+        };
+        await joinOrganizationService(data);
         if (response.code === 0) {
           ElMessage.success("加入成功！");
           this.$emit("update:dialogVisible", false);
           this.resetShareCode();
         } else {
-          ElMessage.error("加入失败，请重试");
+          ElMessage.error(error.data);
         }
       } catch (error) {
-        ElMessage.error("加入失败，请重试");
+        ElMessage.error(error.data);
         console.error(error);
       }
     },

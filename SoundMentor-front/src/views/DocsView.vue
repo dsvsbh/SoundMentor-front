@@ -56,8 +56,9 @@ export default {
 .menu {
   margin-top: 30px;
   background-color: white;
-  width: 72.3%;
+  width: 82.7%;
   margin: 0 auto;
   border-radius: 15px 15px 0 0;
+  padding: 0 200px;
 }
 </style>

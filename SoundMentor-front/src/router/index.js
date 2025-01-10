@@ -4,6 +4,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import DocsView from '../views/DocsView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import GroupView from '../views/GroupView.vue'
+import GroupDetails from '../components/GroupDetails.vue'
 //定义路由关系
 const routes = [
     {
@@ -20,6 +22,16 @@ const routes = [
         path: '/profile',
         name: 'profile',
         component: ProfileView
+    },
+    {
+        path: '/group',
+        name: 'group',
+        component: GroupView
+    },
+    {
+        path: '/groupDetails/:id',
+        name: 'groupDetails',
+        component: GroupDetails
     }
 ]
 
@@ -27,6 +39,16 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes
+});
+
+//    路由守卫
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('token');
+    if (to.path === '/group' && !token) {
+        next('/');
+    } else {
+        next();
+    }
 });
 
 export default router

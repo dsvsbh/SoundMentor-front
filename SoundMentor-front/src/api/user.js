@@ -48,63 +48,131 @@ export const sendEmailService = (email) => {
 
 
 
-//                        需要请求头
+// =========================需要请求头===========================
 
 // 用户登出
 export const logoutService = async () => {
     const token = localStorage.getItem('token');
     const response = await axios.post('/api/user/logout', {}, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: token,
         },
     });
 
     return response.data;
 };
-
-//          组织相关接口
-
-// 获取组织列表
-export const getOrganizationListService = () => {
+// 修改用户信息
+export const updateUserInfoService = async (userInfo) => {
     const token = localStorage.getItem('token');
-    const response = request.get('/openApi/organization/getOrganizationList', {
-        headers: { Authorization: `Bearer ${token}` },
+    const response = await request.post('/user/updateUserInfo', JSON.stringify(userInfo), {
+        headers: { Authorization: token },
+    });
+    return response.data;
+};
+// 修改用户密码
+export const updateUserPasswordService = (passwordInfo) => {
+    const token = localStorage.getItem('token');
+    const response = request.post('/user/updatePassword', JSON.stringify(passwordInfo), {
+        headers: { Authorization: token },
     });
     return response.data;
 }
 
+//--------------- 组织相关接口 ---------------
+
+
+// 获取组织列表
+export const getOrganizationListService = async (role) => {
+    try {
+        var params = new URLSearchParams();
+        params.append('role', role);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No token found in localStorage');
+        }
+        const response = await request.get('/organization/list', {
+            headers: { Authorization: token },
+            params: params
+        });
+        if (response.code == 0) {
+            return response.data;
+        } else {
+            throw new Error(`HTTP error! status: ${response.code}`);
+        }
+    } catch (error) {
+        console.error('Error fetching organization list:', error);
+        throw error;
+    }
+};
+
 // 查询组织成员列表
-export const getOrganizationMemberListService = (organizationId) => {
-    const token = localStorage.getItem('token');
-    const response = request.get(`/organization/userList/${organizationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+export const getOrganizationMemberListService = async (organizationId) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await request.get(`/organization/userList/${organizationId}`, {
+            headers: { Authorization: token },
+        });
+        if (response.code == 0) {
+            return response.data;
+        } else {
+            throw new Error(`HTTP error! status: ${response.code}`);
+        }
+    } catch (error) {
+        console.error('Error fetching organization member list:', error);
+        throw error;
+    }
 }
 
 // 获取组织分享码
-export const getOrganizationShareCodeService = (organizationId) => {
-    const token = localStorage.getItem('token');
-    const response = request.get(`/organization/shareCode/${organizationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
-}
+export const getOrganizationShareCodeService = async (organizationId) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('请登录！');
+        }
+        const response = await request.get(`/organization/shareCode/${organizationId}`, {
+            headers: { Authorization: token },
+        });
+        if (response.code == 0) {
+            return response.data;
+        } else {
+            throw new Error(`Error response from server: ${response.message || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error fetching organization share code:', error);
+        throw error;
+    }
+};
 
 // 用户创建组织
 export const createOrganizationService = (organizationData) => {
-    const token = localStorage.getItem('token');
-    const response = request.post('/organization/create', JSON.stringify(organizationData), {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    try {
+        const token = localStorage.getItem('token');
+        const response = request.post('/organization/create', JSON.stringify(organizationData), {
+            headers: { Authorization: token },
+        });
+        return response;
+    } catch (error) {
+        console.error('Error creating organization:', error);
+        throw error;
+    }
 }
 
 // 用户通过分享码加入组织
-export const joinOrganizationService = (organization) => {
-    const token = localStorage.getItem('token');
-    const response = request.post('/organization/join', JSON.stringify(organization), {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
-}
+export const joinOrganizationService = async (data) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await request.post('/organization/join', JSON.stringify(data), {
+            headers: {
+                Authorization: token,
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log(response);
+        return response;
+    } catch (error) {
+        console.error('Error joining organization:', error);
+        throw error;
+    }
+};
+

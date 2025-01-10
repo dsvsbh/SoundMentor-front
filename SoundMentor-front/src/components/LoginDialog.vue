@@ -231,25 +231,23 @@ export default {
               username: this.loginForm.username,
               password: this.loginForm.password,
             });
+
             if (res.code == 0) {
               ElMessage.success("登录成功");
-            } else {
-              ElMessage.error(res.message);
-            }
+              this.visible = false;
 
-            if (this.rememberMe) {
-              localStorage.setItem("token", res.data.token);
-            } else {
-              sessionStorage.setItem("token", res.data.token);
-            }
+              const storage = this.rememberMe ? localStorage : sessionStorage;
+              storage.setItem("token", res.data.token);
 
-            this.visible = false;
-            this.$router.push("/").then(() => {
-              window.location.reload();
-            });
+              this.$router.push("/").then(() => {
+                window.location.reload();
+              });
+            } else {
+              ElMessage.error(res.data || "登录失败");
+            }
           } catch (error) {
             console.error("登录失败:", error);
-            ElMessage.error(error.message || "登录失败");
+            ElMessage.error(error.message || "登录失败，请稍后重试");
           }
         }
       });

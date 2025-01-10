@@ -21,7 +21,7 @@
 
       <el-sub-menu index="3" class="right" active-text-color="black">
         <template #title
-          ><span style="font-size: 18px">{{
+          ><span style="font-size: 16px">{{
             username ? username : "请登录/注册"
           }}</span></template
         >
@@ -36,7 +36,7 @@
           </el-menu-item>
         </div>
         <div v-else>
-          <el-menu-item index="3-1">
+          <el-menu-item index="/profile">
             <el-icon><User /></el-icon>
             <span>{{ username }}</span>
           </el-menu-item>
@@ -158,10 +158,7 @@ export default {
     handleMenuClick() {
       if (!this.isLoggedIn) {
         ElMessage.error("请登录");
-        this.$router.push("/");
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        this.$refs.loginDialog.visible = true;
       } else {
         this.$router.push("/group");
       }
@@ -212,7 +209,7 @@ export default {
 }
 
 .el-menu .el-menu-item {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .user-dropdown {

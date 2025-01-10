@@ -27,10 +27,11 @@ instance.interceptors.response.use(
             return result.data;
         }
         if (result.data.code == '2025009') {
-            ElMessage.error('未登录');
+            ElMessage.error('未登录或认证过期');
+            router.push('/login');
             return Promise.reject(result.data);
         }
-        ElMessage.error(result.data.message || '服务异常');
+        console.log(result.data.message);
         return Promise.reject(result.data);
     },
     err => {

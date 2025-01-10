@@ -10,7 +10,7 @@
     </div>
     <!-- 标签页 -->
     <el-tabs v-model="activeSubTab" class="tabs">
-      <el-tab-pane label="全部" name="all"></el-tab-pane>
+      <el-tab-pane label="全部" name="all"> </el-tab-pane>
       <el-tab-pane label="预设" name="preset"></el-tab-pane>
       <el-tab-pane label="自定义" name="custom"></el-tab-pane>
       <el-tab-pane label="收藏" name="favorites"></el-tab-pane>
@@ -46,9 +46,22 @@
           <el-option label="中立" value="neutral"></el-option>
         </el-select>
         <div class="action-buttons">
-          <el-button @click="playAudio(audio)">试听</el-button>
-          <el-button @click="downloadAudio(audio)">下载</el-button>
+          <el-button @click="playAudio(audio)">
+            <el-icon color="#24a3ff" v-if="!audio.isPlaying"
+              ><VideoPlay
+            /></el-icon>
+            <el-icon color="#24a3ff" v-else><VideoPause /></el-icon>
+            {{ audio.isPlaying ? "暂停" : "试听" }}
+          </el-button>
+          <el-button @click="downloadAudio(audio)">
+            <el-icon color="#24a3ff"><Download /></el-icon>
+            下载
+          </el-button>
           <el-button @click="toggleFavorite(audio)">
+            <el-icon color="#24a3ff" v-if="audio.isFavorite"
+              ><StarFilled
+            /></el-icon>
+            <el-icon color="#24a3ff" v-else><Star /></el-icon>
             {{ audio.isFavorite ? "取消收藏" : "收藏" }}
           </el-button>
         </div>
@@ -59,29 +72,22 @@
 
 <script>
 import {
-  Microphone,
-  Document,
-  Reading,
-  Cellphone,
-  ChatLineRound,
-  ChatRound,
-  Message,
-  Phone,
-  Location,
+  Star,
+  VideoPlay,
+  Download,
+  VideoPause,
+  StarFilled,
 } from "@element-plus/icons-vue";
-
+import { ElMessage } from "element-plus";
+const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 export default {
   name: "VoiceLibrary",
   components: {
-    Microphone,
-    Document,
-    Reading,
-    Cellphone,
-    ChatLineRound,
-    ChatRound,
-    Message,
-    Phone,
-    Location,
+    Star,
+    VideoPlay,
+    Download,
+    VideoPause,
+    StarFilled,
   },
   data() {
     return {
@@ -97,6 +103,7 @@ export default {
           speed: 1.0,
           emotion: "neutral",
           isFavorite: false,
+          isPlaying: false,
         },
         {
           title: "温柔女声",
@@ -107,6 +114,7 @@ export default {
           speed: 1.0,
           emotion: "happy",
           isFavorite: false,
+          isPlaying: false,
         },
         {
           title: "专业播音腔",
@@ -117,6 +125,7 @@ export default {
           speed: 1.0,
           emotion: "neutral",
           isFavorite: false,
+          isPlaying: false,
         },
         {
           title: "活力青年音",
@@ -127,6 +136,7 @@ export default {
           speed: 1.0,
           emotion: "happy",
           isFavorite: false,
+          isPlaying: false,
         },
         {
           title: "沉稳中年音",
@@ -137,6 +147,7 @@ export default {
           speed: 1.0,
           emotion: "neutral",
           isFavorite: false,
+          isPlaying: false,
         },
         {
           title: "情感朗读音",
@@ -147,6 +158,7 @@ export default {
           speed: 1.0,
           emotion: "neutral",
           isFavorite: false,
+          isPlaying: false,
         },
       ],
     };
@@ -154,12 +166,17 @@ export default {
   methods: {
     playAudio(audio) {
       // 播放音频的逻辑
+      audio.isPlaying = !audio.isPlaying;
     },
     downloadAudio(audio) {
       // 下载音频的逻辑
     },
     toggleFavorite(audio) {
-      // 切换收藏状态的逻辑
+      if (userInfo) {
+        audio.isFavorite = !audio.isFavorite;
+      } else {
+        ElMessage.error("请先登录");
+      }
     },
   },
   computed: {
@@ -195,7 +212,7 @@ export default {
   align-items: center;
   gap: 20px;
   background-color: white;
-  width: 70%;
+  width: 80%;
   margin: 0 auto;
   margin-bottom: 30px;
   border-radius: 0 0 15px 15px;
@@ -235,10 +252,14 @@ export default {
   display: flex;
   gap: 10px;
   justify-content: center;
+  color: #24a3ff;
 }
 .audio-items .audio-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.audio-items .el-icon {
+  margin-right: 5px;
 }
 </style>

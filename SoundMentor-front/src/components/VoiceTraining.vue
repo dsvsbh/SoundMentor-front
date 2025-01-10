@@ -1,8 +1,7 @@
 <template>
   <div class="voice-training">
-    <h2>训练AI声音</h2>
-    <p>通过上传或录制声音样本，训练属于你的个性化AI声音</p>
     <div class="upload-section">
+      <!-- 左 -->
       <el-upload
         class="upload-demo"
         drag
@@ -10,45 +9,50 @@
         :on-change="handleUpload"
         :before-upload="beforeUpload"
       >
-        <i class="el-icon-upload"></i>
+        <h3>上传音频文件</h3>
+        <el-icon color="#24a3ff" size="50"><MessageBox /></el-icon>
         <div class="el-upload__text">点击或拖拽文件到这里上传</div>
         <div class="el-upload__tip">支持格式：.mp3, .ogg, .wav</div>
       </el-upload>
-
-      <div class="training-list">
-        <div v-for="file in uploadedFiles" :key="file.name" class="file-item">
-          <p>{{ file.name }}</p>
-          <el-progress :percentage="file.progress"></el-progress>
-          <el-button @click="removeFile(file)">删除</el-button>
-        </div>
-      </div>
     </div>
-    <el-button type="primary" @click="startTraining">开始训练</el-button>
+    <!-- 右 -->
+    <div class="online-record">
+      <h3>在线录制</h3>
+      <el-icon color="#24a3ff" size="50"><Mic /></el-icon>
+
+      <el-button type="primary" @click="startTraining">开始录制</el-button>
+    </div>
+    <!-- <div class="training-list">
+      <div v-for="file in uploadedFiles" :key="file.name" class="file-item">
+        <p>{{ file.name }}</p>
+        <el-progress :percentage="file.progress"></el-progress>
+        <el-button @click="removeFile(file)">删除</el-button>
+      </div>
+    </div> -->
   </div>
 </template>
 
 <script>
+import { Upload, MessageBox, Mic } from "@element-plus/icons-vue";
 export default {
   name: "VoiceTraining",
+  components: {
+    Upload,
+    MessageBox,
+    Mic,
+  },
   data() {
     return {
       uploadedFiles: [],
     };
   },
   methods: {
-    handleUpload(file) {
-      // 处理上传文件的逻辑
-    },
+    handleUpload(file) {},
     beforeUpload(file) {
-      // 验证上传文件格式
-      return true; // 可自定义验证
+      return true;
     },
-    removeFile(file) {
-      // 删除文件的逻辑
-    },
-    startTraining() {
-      // 开始训练的逻辑
-    },
+    removeFile(file) {},
+    startTraining() {},
   },
 };
 </script>
@@ -58,12 +62,26 @@ export default {
   flex: 1;
   padding: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   background-color: white;
-  width: 70%;
+  width: 80%;
   margin: 0 auto;
   margin-bottom: 30px;
   border-radius: 0 0 15px 15px;
+}
+.upload-section {
+  flex: 1;
+}
+.online-record {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 0.5px solid #dedede;
+  height: 237px;
+  border-radius: 5px;
+  margin-bottom: 10px;
 }
 </style>
