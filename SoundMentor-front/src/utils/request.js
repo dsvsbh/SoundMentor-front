@@ -28,6 +28,9 @@ instance.interceptors.response.use(
         }
         if (result.data.code == '2025009') {
             ElMessage.error('未登录或认证过期');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            localStorage.setItem('isLogin', false);
             router.push('/login');
             return Promise.reject(result.data);
         }

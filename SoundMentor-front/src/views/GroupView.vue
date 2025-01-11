@@ -5,34 +5,17 @@
         <text style="font-size: 30px; font-weight: bold">我的组织</text>
         <div class="bar"></div>
       </div>
+
       <el-button-group>
         <el-button
-          :icon="Menu"
-          :style="activeButton === '全部组织' ? activeStyle : {}"
-          @click="filterGroups('全部组织')"
-          >全部组织</el-button
+          v-for="(button, index) in buttonList"
+          :key="index"
+          :icon="button.icon"
+          :style="activeButton === button.label ? activeStyle : {}"
+          @click="filterGroups(button.label)"
         >
-
-        <el-button
-          :icon="Flag"
-          :style="activeButton === '我创建的' ? activeStyle : {}"
-          @click="filterGroups('我创建的')"
-          >我创建的</el-button
-        >
-
-        <el-button
-          :icon="Tools"
-          :style="activeButton === '我管理的' ? activeStyle : {}"
-          @click="filterGroups('我管理的')"
-          >我管理的</el-button
-        >
-
-        <el-button
-          :icon="User"
-          :style="activeButton === '我加入的' ? activeStyle : {}"
-          @click="filterGroups('我加入的')"
-          >我加入的</el-button
-        >
+          {{ button.label }}
+        </el-button>
       </el-button-group>
     </div>
     <el-space wrap style="margin-left: 30px">
@@ -44,7 +27,6 @@
         v-for="group in filteredGroupList"
         :key="group.id"
         class="box-card"
-        @click="handleGroupClick(group.id)"
       >
         <!-- 头部 -->
         <template #header>
@@ -53,6 +35,9 @@
               <span style="font-size: 20px; font-weight: bold">{{
                 group.name
               }}</span>
+              <el-button @click="getShareCode(group.id)" link
+                >获取邀请码</el-button
+              >
             </div>
             <div class="under-title">
               <el-tag type="primary" size="small">{{
@@ -63,13 +48,13 @@
           </div>
         </template>
         <!-- 中间 -->
-        <div class="left-box">
+        <div class="left-box" @click="handleGroupClick(group.id)">
           <span style="font-size: 30px; font-weight: bold">{{
             group.userCount
           }}</span>
           <div>成员</div>
         </div>
-        <div class="right-box">
+        <div class="right-box" @click="handleGroupClick(group.id)">
           <span style="font-size: 30px; font-weight: bold">{{
             group.fileCount
           }}</span>
@@ -85,21 +70,23 @@
   </div>
 
   <!-- 创建组织悬浮窗 -->
-  <el-dialog v-model="dialogVisible" title="创建组织" width="30%" ref="form">
-    <el-form :model="form" label-width="120px">
-      <el-form-item label="组织名称">
+  <el-dialog v-model="dialogVisible" title="创建组织" width="30%">
+    <el-form :model="form" label-width="120px" :rules="rule" :ref="form">
+      <el-form-item label="组织名称" prop="name">
         <el-input v-model="form.name" />
       </el-form-item>
-      <el-form-item label="组织描述">
+      <el-form-item label="组织描述" prop="description">
         <el-input v-model="form.description" />
       </el-form-item>
-      <el-form-item label="成员人数">
-        <el-select v-model="form.capacity" placeholder="1">
-          <el-option v-for="i in 10" :key="i" :value="i">{{ i }}</el-option>
+      <el-form-item label="成员人数" prop="capacity">
+        <el-select v-model="form.capacity" placeholder="2">
+          <el-option v-for="i in (2, 5)" :key="i" :value="i">{{ i }}</el-option>
         </el-select>
       </el-form-item>
-      <el-button type="primary" @click="createGroup">确定</el-button>
-      <el-button @click="dialogVisible = false">取消</el-button>
+      <div style="display: flex; justify-content: center">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="createGroup">确定</el-button>
+      </div>
     </el-form>
   </el-dialog>
   <Footer />
@@ -107,13 +94,13 @@
 
 <script>
 import {
+  InfoFilled,
+  Plus,
+  Calendar,
   Menu,
   Flag,
   Tools,
   User,
-  InfoFilled,
-  Plus,
-  Calendar,
 } from "@element-plus/icons-vue";
 import Footer from "@/components/Footer.vue";
 import { getOrganizationListService } from "@/api/user";
@@ -125,6 +112,7 @@ import {
 import { defineComponent, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 const typeList = ["CREATOR", "ADMIN", "USER"];
+import { formatDate } from "@/utils/TimeFromUtil";
 
 export default defineComponent({
   components: {
@@ -147,7 +135,7 @@ export default defineComponent({
     const form = ref({
       name: "",
       description: "",
-      capacity: 1,
+      capacity: 2,
     });
 
     const rule = {
@@ -190,6 +178,9 @@ export default defineComponent({
         try {
           var result = await getOrganizationListService(type);
           if (result) {
+            result.forEach((item) => {
+              item.createdTime = formatDate(item.createdTime);
+            });
             groupList.value.push(...result);
           } else {
             console.error(`Invalid response for type ${type}:`, result);
@@ -201,24 +192,31 @@ export default defineComponent({
         }
       }
     };
+    const getShareCode = async (id) => {
+      try {
+        const res = await getOrganizationShareCodeService(id);
+        console.log(res);
+        if (res) {
+          ElMessage.success(`已获取组织邀请码：${id}-${res}`);
+        } else {
+          ElMessage.error(res.message || "获取邀请码失败");
+        }
+      } catch (error) {
+        console.error("获取组织邀请码时出错：", error);
+        ElMessage.error("获取组织邀请码失败，请稍后再试。");
+      }
+    };
     const handleGroupClick = async (id) => {
-      // try {
-      //   const res = await getOrganizationShareCodeService(id);
-      //   console.log(res);
-      //   if (res) {
-      //     ElMessage.success(`已获取组织邀请码：${id}-${res}`);
-      //   } else {
-      //     ElMessage.error(res.message || "获取邀请码失败");
-      //   }
-      // } catch (error) {
-      //   console.error("获取组织邀请码时出错：", error);
-      //   ElMessage.error("获取组织邀请码失败，请稍后再试。");
-      // }
       router.push(`/groupDetails/${id}`);
     };
     const createGroup = async () => {
+      const data = {
+        name: form.value.name,
+        description: form.value.description,
+        capacity: form.value.capacity,
+      };
       try {
-        await createOrganizationService(form.value);
+        const res = await createOrganizationService(data);
         if (res.code == 0) {
           ElMessage.success("创建成功");
           dialogVisible.value = false;
@@ -230,7 +228,16 @@ export default defineComponent({
         ElMessage.error("创建组织失败: " + error.message);
       }
     };
-
+    const buttonList = ref([
+      { label: "全部组织", icon: Menu },
+      { label: "我创建的", icon: Flag },
+      { label: "我管理的", icon: Tools },
+      { label: "我加入的", icon: User },
+    ]);
+    const activeStyle = {
+      backgroundColor: "#409EFF",
+      color: "#fff",
+    };
     const filterGroups = (type) => {
       activeButton.value = type;
       selectedType.value = type;
@@ -266,6 +273,9 @@ export default defineComponent({
       createGroup,
       filterGroups,
       handleGroupClick,
+      getShareCode,
+      buttonList,
+      activeStyle,
     };
   },
 });
@@ -324,6 +334,10 @@ export default defineComponent({
 .box-card:hover {
   transform: translateY(-10px);
   background: linear-gradient(to bottom, #cefcff, #e4fafc);
+}
+.card-title {
+  display: flex;
+  justify-content: space-between;
 }
 .info-icon {
   position: relative;

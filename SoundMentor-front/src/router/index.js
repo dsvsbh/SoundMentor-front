@@ -11,27 +11,42 @@ const routes = [
     {
         path: '/',
         name: 'Home',
-        component: Home
+        component: Home,
+        meta: {
+            title: '首页'
+        }
     },
     {
         path: '/docs',
         name: 'docs',
-        component: DocsView
+        component: DocsView,
+        meta: {
+            title: '声音样本库'
+        }
     },
     {
         path: '/profile',
         name: 'profile',
-        component: ProfileView
+        component: ProfileView,
+        meta: {
+            title: '个人中心'
+        }
     },
     {
         path: '/group',
         name: 'group',
-        component: GroupView
+        component: GroupView,
+        meta: {
+            title: '我的组织'
+        }
     },
     {
         path: '/groupDetails/:id',
         name: 'groupDetails',
-        component: GroupDetails
+        component: GroupDetails,
+        meta: {
+            title: '组员详情'
+        }
     }
 ]
 
@@ -50,5 +65,8 @@ router.beforeEach((to, from, next) => {
         next();
     }
 });
-
-export default router
+router.beforeEach((to, from, next) => {
+    document.title = "SoundMentor" + " | " + to.meta.title;
+    next();
+});
+export default router;

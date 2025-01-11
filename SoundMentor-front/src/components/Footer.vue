@@ -25,7 +25,13 @@
                   <el-icon color="#79b2ff">
                     <component :is="item.icon" />
                   </el-icon>
-                  {{ item.text }}
+                  <a
+                    :href="getLink(item.text)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {{ item.text }}
+                  </a>
                 </li>
               </ul>
             </div>
@@ -125,6 +131,22 @@ export default {
       },
     };
   },
+  methods: {
+    getLink(serviceText) {
+      switch (serviceText) {
+        case "声音样本库":
+          return "/docs";
+        case "有声PPT制作":
+          return "AudioPPT";
+        case "预览文本朗读":
+          return "TextReading";
+        case "语言学习辅助":
+          return "LanguageLearning";
+        default:
+          return "";
+      }
+    },
+  },
 };
 </script>
 
@@ -165,6 +187,12 @@ export default {
   margin-bottom: 10px;
   display: flex;
   align-items: center;
+  font-size: 13px;
+}
+
+.footer-section a {
+  text-decoration: none;
+  color: var(--el-text-color-regular);
   font-size: 13px;
 }
 

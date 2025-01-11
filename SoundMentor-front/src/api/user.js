@@ -147,9 +147,10 @@ export const getOrganizationShareCodeService = async (organizationId) => {
 // 用户创建组织
 export const createOrganizationService = (organizationData) => {
     try {
+        console.log(JSON.stringify(organizationData));
         const token = localStorage.getItem('token');
         const response = request.post('/organization/create', JSON.stringify(organizationData), {
-            headers: { Authorization: token },
+            headers: { Authorization: token, 'Content-Type': 'application/json' },
         });
         return response;
     } catch (error) {

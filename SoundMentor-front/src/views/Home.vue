@@ -5,7 +5,11 @@
       <!-- 轮播图 -->
       <div class="hero">
         <el-carousel>
-          <el-carousel-item v-for="item in carouselItems" :key="item.id">
+          <el-carousel-item
+            v-for="item in carouselItems"
+            :key="item.id"
+            :style="{ backgroundImage: 'url(' + item.image + ')' }"
+          >
             <div class="carousel-item-content">
               <h1>{{ item.title }}</h1>
               <h3>{{ item.description }}</h3>
@@ -56,6 +60,9 @@
 <script>
 import loginDialog from "../components/LoginDialog.vue";
 import Footer from "../components/Footer.vue";
+import img1 from "../assets/static/1.png";
+import img2 from "../assets/static/2.png";
+import img3 from "../assets/static/3.png";
 import {
   Microphone,
   Document,
@@ -76,17 +83,20 @@ export default {
           id: 1,
           title: "智能生成PPT配音",
           description: "快速生成专业课件配音，提升教学效果",
+          image: img1,
         },
         {
           id: 2,
           title: "智能语言学习助手",
           description:
             "提供发音评测、语音模仿、节奏训练等全方位语言学习解决方案",
+          image: img2,
         },
         {
           id: 3,
           title: "智能语音合成",
           description: "打造专业的教学语音解决方案，让教学更生动",
+          image: img3,
         },
       ],
       features: [
@@ -164,7 +174,8 @@ export default {
 }
 
 .el-carousel__item {
-  background: linear-gradient(to right, #4b4b4b, #e3e3e3);
+  background-size: cover;
+  background-position: center;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
