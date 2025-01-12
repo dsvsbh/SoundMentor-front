@@ -22,123 +22,134 @@
             :on-error="handleAvatarError"
             class="upload-btn"
           >
-            <el-button type="primary">上传头像</el-button>
+            <el-button style="margin-right: 40px" link @click="uploadAvatar"
+              >上传头像</el-button
+            >
           </el-upload>
         </div>
       </div>
     </div>
 
     <!-- 用户信息 -->
-    <el-tabs
-      :tab-position="tabPosition"
-      v-model="activeTab"
-      @tab-click="handleTabClick"
-      class="user-info-tabs"
-      style="height: 200px"
-    >
-      <el-tab-pane>
-        <template #label>
-          <span>
-            <el-icon>
-              <User />
-            </el-icon>
-            基本信息
-          </span>
+    <el-container>
+      <el-aside class="aside">
+        <el-menu :default-active="activeTab" @select="handleSelect">
+          <el-menu-item @click="activeTab = '基本信息'" index="1">
+            <template #title>
+              <el-icon><User /></el-icon>
+              <span>基本信息</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item @click="activeTab = '修改密码'" index="2">
+            <template #title>
+              <el-icon><Lock /></el-icon>
+              <span>修改密码</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item @click="activeTab = '我的文件'" index="3">
+            <template #title>
+              <el-icon><Upload /></el-icon>
+              <span>我的文件</span>
+            </template>
+          </el-menu-item>
+        </el-menu>
+      </el-aside>
+      <el-main class="main">
+        <template v-if="activeTab === '基本信息'">
+          <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
+            >基本信息</text
+          >
+          <div class="info-form">
+            <el-form :model="userForm" :rules="rules" ref="userFormRef">
+              <div class="center">
+                <div class="left">
+                  <el-form-item label="用户名" prop="username">
+                    <el-input v-model="userForm.username" />
+                  </el-form-item>
+                  <el-form-item label="手机号" prop="phone">
+                    <el-input v-model="userForm.phone" />
+                  </el-form-item>
+                </div>
+                <div class="right">
+                  <el-form-item label="邮箱" prop="email">
+                    <el-input v-model="userForm.email" disabled="true" />
+                  </el-form-item>
+                  <el-form-item label="账号" prop="name">
+                    <el-input v-model="userForm.name" disabled="true" />
+                  </el-form-item>
+                </div>
+              </div>
+              <el-button
+                type="primary"
+                @click="saveUserInfo"
+                style="width: 200px; margin: 20px 200px"
+                >保存修改</el-button
+              >
+            </el-form>
+          </div>
         </template>
-        <el-form
-          :model="userForm"
-          :rules="rules"
-          ref="userForm"
-          label-width="120px"
-        >
-          <el-form-item label="用户名" prop="username">
-            <el-input
-              v-model="userForm.username"
-              :disabled="false"
-              :placeholder="userInfo.username"
+        <template v-if="activeTab === '修改密码'">
+          <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
+            >修改密码</text
+          >
+          <div class="password-form">
+            <el-form
+              :model="passwordForm"
+              :rules="passwordRules"
+              ref="passwordFormRef"
             >
-            </el-input>
-          </el-form-item>
-          <el-form-item label="手机号" prop="phone">
-            <el-input
-              v-model="userForm.phone"
-              :disabled="false"
-              :placeholder="userInfo.phone"
-            >
-            </el-input>
-          </el-form-item>
-          <el-form-item label="账号" prop="account">
-            <el-input
-              v-model="userForm.account"
-              :disabled="true"
-              :placeholder="userInfo.name"
-            >
-            </el-input>
-          </el-form-item>
-          <el-form-item label="邮箱" prop="email">
-            <el-input
-              v-model="userForm.email"
-              :disabled="true"
-              :placeholder="userInfo.email"
-            ></el-input>
-          </el-form-item>
-          <el-button type="primary" @click="saveUserInfo">保存修改</el-button>
-        </el-form>
-      </el-tab-pane>
-
-      <!-- 修改密码 -->
-      <el-tab-pane>
-        <template #label>
-          <span>
-            <el-icon>
-              <Lock />
-            </el-icon>
-            修改密码
-          </span>
+              <el-form-item label="原密码" prop="oldPassword">
+                <el-input
+                  v-model="passwordForm.oldPassword"
+                  style="width: 213px"
+                />
+              </el-form-item>
+              <el-form-item label="新密码" prop="newPassword">
+                <el-input
+                  v-model="passwordForm.newPassword"
+                  style="width: 213px"
+                />
+              </el-form-item>
+              <el-form-item label="确认密码" prop="confirmPassword">
+                <el-input
+                  v-model="passwordForm.confirmPassword"
+                  style="width: 200px"
+                />
+              </el-form-item>
+            </el-form>
+          </div>
+          <el-button
+            type="primary"
+            @click="updatePassword"
+            style="width: 200px; margin: 20px 280px"
+            >确认修改</el-button
+          >
         </template>
-        <el-form
-          :model="passwordForm"
-          :rules="passwordRules"
-          ref="passwordForm"
-          label-width="120px"
-        >
-          <el-form-item label="原密码" prop="oldPassword">
-            <el-input
-              type="password"
-              v-model="passwordForm.oldPassword"
-            ></el-input>
-          </el-form-item>
-          <el-form-item label="新密码" prop="newPassword">
-            <el-input
-              type="password"
-              v-model="passwordForm.newPassword"
-            ></el-input>
-          </el-form-item>
-          <el-form-item label="确认密码" prop="confirmPassword">
-            <el-input
-              type="password"
-              v-model="passwordForm.confirmPassword"
-            ></el-input>
-          </el-form-item>
-          <el-button type="primary" @click="updatePassword">修改密码</el-button>
-        </el-form>
-      </el-tab-pane>
-    </el-tabs>
+        <template v-if="activeTab === '我的文件'">
+          <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
+            >我的文件</text
+          >
+        </template>
+      </el-main>
+    </el-container>
   </div>
+  <Footer />
 </template>  
 
 <script>
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import Header from "../components/HeaderNav.vue";
 import Footer from "../components/Footer.vue";
 import { updateUserInfoService, updateUserPasswordService } from "../api/user";
 import { User, Lock, Upload } from "@element-plus/icons-vue";
+import { formatDate } from "@/utils/TimeFromUtil";
 const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 export default {
   components: {
     User,
     Lock,
+    Footer,
+    Upload,
   },
   setup() {
     const userForm = ref({
@@ -194,11 +205,14 @@ export default {
     };
 
     const activeTab = ref("基本信息");
-
+    const handleSelect = (key, keyPath) => {
+      activeTab.value = key;
+    };
     const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
     onMounted(() => {
       userForm.value = { ...userInfo };
+      userForm.value.createdTime = formatDate(userInfo.createdTime);
     });
 
     const handleAvatarSuccess = (res, file) => {
@@ -210,10 +224,11 @@ export default {
 
     const saveUserInfo = async () => {
       const userInfo = {
-        name: this.userForm.username || "",
-        phone: this.userForm.phone || "",
-        headImg: this.userForm.headImg || "",
+        name: userForm.username || "",
+        phone: userForm.phone || "",
+        headImg: userForm.headImg || "",
       };
+      console.log(userInfo);
 
       try {
         const res = await updateUserInfoService(userInfo);
@@ -233,15 +248,15 @@ export default {
 
     return {
       userForm,
+      formatDate,
       passwordForm,
       rules,
       passwordRules,
       activeTab,
       saveUserInfo,
       updatePassword,
+      handleSelect,
       userInfo,
-      Header,
-      Footer,
       background: "linear-gradient(135deg, #3fa4fa, #36cfdd)",
     };
   },
@@ -256,9 +271,10 @@ export default {
   justify-content: center;
   width: 100%;
   height: 100%;
+  margin-bottom: 30px;
 }
 .header {
-  width: 1350px;
+  width: 1080px;
   height: 260px;
   margin: 30px auto;
   border-radius: 10px;
@@ -277,6 +293,7 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: row;
+  margin-left: 20px;
 }
 .header .left {
   width: 600px;
@@ -300,4 +317,52 @@ export default {
   margin-top: 10px;
   color: rgb(58, 58, 58);
 }
+.aside {
+  width: 250px;
+  height: 168px;
+  margin-right: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+.main {
+  width: 800px;
+  height: 100%;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+.info-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+}
+.info-form .center {
+  padding: 10px 10px;
+  height: 100px;
+  width: 610px;
+  border-style: solid;
+  border-width: 1px 0 1px 0;
+  border-color: #e8e8e8;
+}
+.info-form .left {
+  float: left;
+}
+.info-form .right {
+  margin-left: 100px;
+  float: right;
+}
+.password-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 30px;
+  margin-left: 60px;
+  width: 610px;
+  border-style: solid;
+  border-width: 1px 0 1px 0;
+  padding-top: 10px;
+  border-color: #e8e8e8;
+}
 </style>
+

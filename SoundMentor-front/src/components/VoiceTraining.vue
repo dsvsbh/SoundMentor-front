@@ -3,6 +3,7 @@
     <div class="upload-section">
       <!-- 左 -->
       <el-upload
+        v-model:file-list="uploadedFiles"
         class="upload-demo"
         drag
         action=""
@@ -66,9 +67,13 @@ export default {
   align-items: center;
   background-color: white;
   width: 80%;
+  height: 400px;
   margin: 0 auto;
   margin-bottom: 30px;
   border-radius: 0 0 15px 15px;
+}
+.upload-demo {
+  height: 100%;
 }
 .upload-section {
   flex: 1;
