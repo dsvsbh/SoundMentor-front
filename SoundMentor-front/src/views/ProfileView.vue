@@ -102,18 +102,21 @@
                 <el-input
                   v-model="passwordForm.oldPassword"
                   style="width: 213px"
+                  type="password"
                 />
               </el-form-item>
               <el-form-item label="新密码" prop="newPassword">
                 <el-input
                   v-model="passwordForm.newPassword"
                   style="width: 213px"
+                  type="password"
                 />
               </el-form-item>
               <el-form-item label="确认密码" prop="confirmPassword">
                 <el-input
                   v-model="passwordForm.confirmPassword"
                   style="width: 200px"
+                  type="password"
                 />
               </el-form-item>
             </el-form>
@@ -125,10 +128,65 @@
             >确认修改</el-button
           >
         </template>
+        <!-- 我的文件 -->
         <template v-if="activeTab === '我的文件'">
           <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
             >我的文件</text
           >
+          <div class="file-list">
+            <el-input
+              v-model="searchQuery"
+              placeholder="模糊搜索文件名"
+              @input="handleSearch"
+              clearable
+            />
+
+            <el-select
+              v-model="selectedType"
+              placeholder="选择文件类型"
+              @change="handleFilter"
+            >
+              <el-option label="全部" value="all"></el-option>
+              <el-option label="PPT" value="ppt"></el-option>
+              <el-option label="音频" value="audio"></el-option>
+              <el-option label="图片" value="image"></el-option>
+            </el-select>
+
+            <el-select
+              v-model="pageSize"
+              @change="handlePageSizeChange"
+              placeholder="选择每页条数"
+            >
+              <el-option
+                v-for="size in pageSizes"
+                :key="size"
+                :label="size"
+                :value="size"
+              ></el-option>
+            </el-select>
+
+            <el-table :data="paginatedData" style="width: 100%">
+              <el-table-column prop="name" label="文件名称"></el-table-column>
+              <el-table-column prop="size" label="文件大小"></el-table-column>
+              <el-table-column
+                prop="duration"
+                label="音频时长"
+              ></el-table-column>
+              <el-table-column
+                prop="uploadTime"
+                label="上传时间"
+              ></el-table-column>
+            </el-table>
+
+            <el-pagination
+              :current-page="currentPage"
+              :page-size="pageSize"
+              :total="filteredData.length"
+              @current-change="handlePageChange"
+              layout="total, prev, pager, next, sizes"
+              :page-sizes="pageSizes"
+            />
+          </div>
         </template>
       </el-main>
     </el-container>
@@ -143,7 +201,6 @@ import Footer from "../components/Footer.vue";
 import { updateUserInfoService, updateUserPasswordService } from "../api/user";
 import { User, Lock, Upload } from "@element-plus/icons-vue";
 import { formatDate } from "@/utils/TimeFromUtil";
-const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 export default {
   components: {
     User,
@@ -204,6 +261,34 @@ export default {
       ],
     };
 
+    const searchQuery = ref("");
+    const selectedType = ref("all");
+    const pageSize = ref(10);
+    const currentPage = ref(1);
+    const fileList = ref([
+      // 示例文件数据
+      {
+        name: "file1.ppt",
+        size: "2MB",
+        duration: "",
+        uploadTime: "2025-01-01",
+      },
+      {
+        name: "file2.mp3",
+        size: "3MB",
+        duration: "3:45",
+        uploadTime: "2025-01-02",
+      },
+      {
+        name: "file3.jpg",
+        size: "1MB",
+        duration: "",
+        uploadTime: "2025-01-03",
+      },
+      // 更多文件...
+    ]);
+    const pageSizes = ref([10, 20, 30, 40]);
+
     const activeTab = ref("基本信息");
     const handleSelect = (key, keyPath) => {
       activeTab.value = key;
@@ -246,6 +331,32 @@ export default {
       const res = await updateUserPasswordService({});
     };
 
+    const filteredData = computed(() => {
+      return fileList.value.filter((file) => {
+        const matchesType =
+          selectedType.value === "all" ||
+          file.name.endsWith(selectedType.value);
+        const matchesQuery = file.name.includes(searchQuery.value);
+        return matchesType && matchesQuery;
+      });
+    });
+    const paginatedData = computed(() => {
+      const start = (currentPage.value - 1) * pageSize.value;
+      return filteredData.value.slice(start, start + pageSize.value);
+    });
+    const handleSearch = () => {
+      currentPage.value = 1;
+    };
+    const handleFilter = () => {
+      currentPage.value = 1;
+    };
+    const handlePageSizeChange = () => {
+      currentPage.value = 1;
+    };
+    const handlePageChange = (page) => {
+      currentPage.value = page;
+    };
+
     return {
       userForm,
       formatDate,
@@ -258,6 +369,18 @@ export default {
       handleSelect,
       userInfo,
       background: "linear-gradient(135deg, #3fa4fa, #36cfdd)",
+      searchQuery,
+      selectedType,
+      pageSize,
+      currentPage,
+      fileList,
+      pageSizes,
+      filteredData,
+      paginatedData,
+      handleSearch,
+      handleFilter,
+      handlePageSizeChange,
+      handlePageChange,
     };
   },
 };

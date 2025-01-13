@@ -177,3 +177,78 @@ export const joinOrganizationService = async (data) => {
     }
 };
 
+//  更新组织内的用户角色
+// 只能修改ADMIN和USER角色，不能修改CREATOR角色,只有CREATOR角色可以修改其他用户角色
+export const updateUserRoleService = async (data) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await request.put('/organization/updateRole', JSON.stringify(data), {
+            headers: { Authorization: token, 'Content-Type': 'application/json' },
+        });
+
+        if (response.code != 0) {
+            throw new Error(`更新用户角色失败，状态码: ${response.code}`);
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        throw error;
+    }
+}
+
+// 将用户踢出组织
+// 只有CREATOR角色可以踢出用户
+export const kickUserService = async (data) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await request.delete('/organization/remove', {
+            headers: { Authorization: token },
+            data: data
+        });
+
+        if (response.code != 0) {
+            throw new Error(`删除用户失败，状态码: ${response.code}`);
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error kicking user:', error);
+        throw error;
+    }
+}
+
+// 解散组织
+// 只有CREATOR角色可以解散组织
+export const deleteOrganizationService = async (organizationId) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await request.delete(`/organization/remove/${organizationId}`, {
+            headers: { Authorization: token },
+        });
+        if (response.code != 0) {
+            throw new Error(`删除组织失败，状态码: ${response.code}`);
+        }
+        return response;
+    } catch (error) {
+        console.error('Error deleting organization:', error);
+        throw error;
+    }
+}
+
+//------------------------------文件上传接口------------------------------
+//文件上传接口,任务执行前需要上传文件返回文件地址
+export const uploadFileService = (file) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = request.post('/file/upload', file, {
+            headers: { Authorization: token },
+        });
+        return response;
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        throw error;
+    }
+}
