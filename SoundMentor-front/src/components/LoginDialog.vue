@@ -239,9 +239,7 @@ export default {
               const storage = this.rememberMe ? localStorage : sessionStorage;
               storage.setItem("token", res.data.token);
 
-              this.$router.push("/").then(() => {
-                window.location.reload();
-              });
+              this.$router.push("/");
             } else {
               ElMessage.error(res.data || "登录失败");
             }

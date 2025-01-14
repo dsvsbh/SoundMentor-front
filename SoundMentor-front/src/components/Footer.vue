@@ -137,7 +137,7 @@ export default {
         case "声音样本库":
           return "/docs";
         case "有声PPT制作":
-          return "AudioPPT";
+          return "/ppt";
         case "预览文本朗读":
           return "TextReading";
         case "语言学习辅助":

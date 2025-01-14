@@ -15,7 +15,7 @@ export const useUserStore = defineStore('user', {
         logout() {
             this.isLoggedIn = false
             this.username = ''
-            // 其他登出逻辑
+
         }
     }
 }) 

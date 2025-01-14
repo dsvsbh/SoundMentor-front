@@ -48,7 +48,7 @@
           </div>
         </template>
         <!-- 中间 -->
-        <div class="left-box" @click="handleGroupClick(group.id)">
+        <div class="left-box" @click="handleGroupClick(group.id, group)">
           <span style="font-size: 30px; font-weight: bold">{{
             group.userCount
           }}</span>
@@ -80,7 +80,9 @@
       </el-form-item>
       <el-form-item label="成员人数" prop="capacity">
         <el-select v-model="form.capacity" placeholder="2">
-          <el-option v-for="i in (2, 5)" :key="i" :value="i">{{ i }}</el-option>
+          <el-option v-for="i in (2, 10)" :key="i" :value="i">{{
+            i
+          }}</el-option>
         </el-select>
       </el-form-item>
       <div style="display: flex; justify-content: center">
@@ -103,12 +105,12 @@ import {
   User,
 } from "@element-plus/icons-vue";
 import Footer from "@/components/Footer.vue";
-import { getOrganizationListService } from "@/api/user";
+import { getOrganizationListService } from "@/api/group";
 import { ElMessage } from "element-plus";
 import {
   createOrganizationService,
   getOrganizationShareCodeService,
-} from "@/api/user";
+} from "@/api/group";
 import { defineComponent, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 const typeList = ["CREATOR", "ADMIN", "USER"];
@@ -206,8 +208,14 @@ export default defineComponent({
         ElMessage.error("获取组织邀请码失败，请稍后再试。");
       }
     };
-    const handleGroupClick = async (id) => {
-      router.push(`/groupDetails/${id}`);
+    const handleGroupClick = async (id, group) => {
+      console.log(group);
+      router.push({
+        path: `/groupDetail/${id}`,
+        query: {
+          group: group,
+        },
+      });
     };
     const createGroup = async () => {
       const data = {

@@ -39,12 +39,6 @@
           min="0.5"
           step="0.1"
         ></el-slider>
-        <el-select v-model="audio.emotion" placeholder="情感">
-          <el-option label="愉快" value="happy"></el-option>
-          <el-option label="生气" value="angry"></el-option>
-          <el-option label="悲伤" value="sad"></el-option>
-          <el-option label="中立" value="neutral"></el-option>
-        </el-select>
         <div class="action-buttons">
           <el-button @click="playAudio(audio)">
             <el-icon color="#24a3ff" v-if="!audio.isPlaying"
@@ -79,6 +73,7 @@ import {
   StarFilled,
 } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
+import { getSoundLibList } from "@/api/voice";
 const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 export default {
   name: "VoiceLibrary",
@@ -163,7 +158,15 @@ export default {
       ],
     };
   },
+  mounted() {
+    this.getSoundLibList();
+  },
   methods: {
+    async getSoundLibList() {
+      const res = await getSoundLibList();
+      console.log(res);
+    },
+
     playAudio(audio) {
       // 播放音频的逻辑
       audio.isPlaying = !audio.isPlaying;

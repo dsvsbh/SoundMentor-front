@@ -3,11 +3,7 @@
     <div class="header" @mousemove="updateBackground" :style="{ background }">
       <div>
         <!-- 如果头像为空，则显示默认头像 -->
-        <img
-          :src="userInfo.headImg || './logo.png'"
-          alt="头像"
-          class="avatar"
-        />
+        <img :src="userInfo.headImg" class="avatar" />
         <div class="under-avatar">
           <div class="left">
             <div class="username">{{ userInfo.username }}</div>
@@ -82,9 +78,10 @@
               <el-button
                 type="primary"
                 @click="saveUserInfo"
+                :disabled="!isFormModified"
                 style="width: 200px; margin: 20px 200px"
-                >保存修改</el-button
-              >
+                >确认修改
+              </el-button>
             </el-form>
           </div>
         </template>
@@ -194,197 +191,178 @@
   <Footer />
 </template>  
 
-<script>
-import { ref, onMounted } from "vue";
+<script setup>
+import { ref, onMounted, computed } from "vue";
 import { ElMessage } from "element-plus";
-import Footer from "../components/Footer.vue";
-import { updateUserInfoService, updateUserPasswordService } from "../api/user";
-import { User, Lock, Upload } from "@element-plus/icons-vue";
+import {
+  updateUserInfoService,
+  updateUserPasswordService,
+  getUserInfoService,
+} from "../api/user";
 import { formatDate } from "@/utils/TimeFromUtil";
-export default {
-  components: {
-    User,
-    Lock,
-    Footer,
-    Upload,
-  },
-  setup() {
-    const userForm = ref({
-      headImg: "",
-      username: "",
-      phone: "",
-      account: "",
-      email: "",
-    });
+import { getSoundLibList } from "../api/voice";
+import Footer from "@/components/Footer.vue";
+import { User, Lock, Upload } from "@element-plus/icons-vue";
 
-    const passwordForm = ref({
-      oldPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+const userForm = ref({
+  headImg: "",
+  username: "",
+  phone: "",
+  account: "",
+  email: "",
+});
 
-    const rules = {
-      headImg: [{ required: true, message: "请上传头像", trigger: "blur" }],
-      phone: [
-        {
-          pattern: /^[0-9]{11}$/,
-          message: "手机号必须为11位数字",
-          trigger: "blur",
-        },
-      ],
-    };
+const passwordForm = ref({
+  oldPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+});
 
-    const passwordRules = {
-      oldPassword: [
-        { required: true, message: "请输入原密码", trigger: "blur" },
-        {
-          pattern: /^[^\s]{6,16}$/,
-          message: "密码长度为6-16位",
-          trigger: "blur",
-        },
-      ],
-      newPassword: [
-        { required: true, message: "请输入新密码", trigger: "blur" },
-      ],
-      confirmPassword: [
-        { required: true, message: "请确认新密码", trigger: "blur" },
-        {
-          validator: (rule, value, callback) => {
-            if (value !== passwordForm.value.newPassword) {
-              callback(new Error("两次输入的密码不一致"));
-            } else {
-              callback();
-            }
-          },
-          trigger: "blur",
-        },
-      ],
-    };
-
-    const searchQuery = ref("");
-    const selectedType = ref("all");
-    const pageSize = ref(10);
-    const currentPage = ref(1);
-    const fileList = ref([
-      // 示例文件数据
-      {
-        name: "file1.ppt",
-        size: "2MB",
-        duration: "",
-        uploadTime: "2025-01-01",
-      },
-      {
-        name: "file2.mp3",
-        size: "3MB",
-        duration: "3:45",
-        uploadTime: "2025-01-02",
-      },
-      {
-        name: "file3.jpg",
-        size: "1MB",
-        duration: "",
-        uploadTime: "2025-01-03",
-      },
-      // 更多文件...
-    ]);
-    const pageSizes = ref([10, 20, 30, 40]);
-
-    const activeTab = ref("基本信息");
-    const handleSelect = (key, keyPath) => {
-      activeTab.value = key;
-    };
-    const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
-
-    onMounted(() => {
-      userForm.value = { ...userInfo };
-      userForm.value.createdTime = formatDate(userInfo.createdTime);
-    });
-
-    const handleAvatarSuccess = (res, file) => {
-      userForm.value.headImg = res.data.url;
-    };
-    const handleAvatarError = (err, file) => {
-      console.log(err);
-    };
-
-    const saveUserInfo = async () => {
-      const userInfo = {
-        name: userForm.username || "",
-        phone: userForm.phone || "",
-        headImg: userForm.headImg || "",
-      };
-      console.log(userInfo);
-
-      try {
-        const res = await updateUserInfoService(userInfo);
-        if (res.code === 0) {
-          ElMessage.success("修改成功！");
-        } else {
-          ElMessage.error(res.message);
-        }
-      } catch (error) {
-        ElMessage.error("请求失败，请稍后重试。");
-      }
-    };
-
-    const updatePassword = async () => {
-      const res = await updateUserPasswordService({});
-    };
-
-    const filteredData = computed(() => {
-      return fileList.value.filter((file) => {
-        const matchesType =
-          selectedType.value === "all" ||
-          file.name.endsWith(selectedType.value);
-        const matchesQuery = file.name.includes(searchQuery.value);
-        return matchesType && matchesQuery;
-      });
-    });
-    const paginatedData = computed(() => {
-      const start = (currentPage.value - 1) * pageSize.value;
-      return filteredData.value.slice(start, start + pageSize.value);
-    });
-    const handleSearch = () => {
-      currentPage.value = 1;
-    };
-    const handleFilter = () => {
-      currentPage.value = 1;
-    };
-    const handlePageSizeChange = () => {
-      currentPage.value = 1;
-    };
-    const handlePageChange = (page) => {
-      currentPage.value = page;
-    };
-
-    return {
-      userForm,
-      formatDate,
-      passwordForm,
-      rules,
-      passwordRules,
-      activeTab,
-      saveUserInfo,
-      updatePassword,
-      handleSelect,
-      userInfo,
-      background: "linear-gradient(135deg, #3fa4fa, #36cfdd)",
-      searchQuery,
-      selectedType,
-      pageSize,
-      currentPage,
-      fileList,
-      pageSizes,
-      filteredData,
-      paginatedData,
-      handleSearch,
-      handleFilter,
-      handlePageSizeChange,
-      handlePageChange,
-    };
-  },
+const rules = {
+  headImg: [{ required: true, message: "请上传头像", trigger: "blur" }],
+  phone: [
+    {
+      pattern: /^[0-9]{11}$/,
+      message: "手机号必须为11位数字",
+      trigger: "blur",
+    },
+  ],
 };
-</script>  
+
+const passwordRules = {
+  oldPassword: [
+    { required: true, message: "请输入原密码", trigger: "blur" },
+    {
+      pattern: /^[^\s]{6,16}$/,
+      message: "密码长度为6-16位",
+      trigger: "blur",
+    },
+  ],
+  newPassword: [{ required: true, message: "请输入新密码", trigger: "blur" }],
+  confirmPassword: [
+    { required: true, message: "请确认新密码", trigger: "blur" },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== passwordForm.value.newPassword) {
+          callback(new Error("两次输入的密码不一致"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur",
+    },
+  ],
+};
+
+const searchQuery = ref("");
+const selectedType = ref("all");
+const pageSize = ref(10);
+const currentPage = ref(1);
+const fileList = ref([]);
+const pageSizes = ref([10, 20, 30, 40]);
+
+const activeTab = ref("基本信息");
+
+const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+const initialUserInfo = { ...userInfo };
+
+const isFormModified = computed(() => {
+  return (
+    userForm.value.username !== initialUserInfo.username ||
+    userForm.value.phone !== initialUserInfo.phone
+  );
+});
+
+onMounted(() => {
+  getUserInfo();
+  getFileList();
+  console.log(userInfo);
+  userForm.value.createdTime = formatDate(userInfo.createdTime);
+});
+
+const handleAvatarSuccess = (res) => {
+  userForm.value.headImg = res.data.url;
+};
+
+const handleAvatarError = (err) => {
+  console.log(err);
+};
+
+const saveUserInfo = async () => {
+  const userInfo = {
+    name: userForm.value.username || "",
+    phone: userForm.value.phone || "",
+    headImg: userForm.value.headImg || "",
+  };
+  console.log(userInfo);
+
+  try {
+    const res = await updateUserInfoService(userInfo);
+    if (res) {
+      ElMessage.success("修改成功！");
+    } else {
+      ElMessage.error(res.message);
+      console.log(res);
+    }
+  } catch (error) {
+    ElMessage.error("请求失败，请稍后重试。");
+  }
+};
+const getUserInfo = async () => {
+  const userInfo = await getUserInfoService();
+  userForm.value = { ...userInfo };
+};
+
+const updatePassword = async () => {
+  const form = {
+    oldPassword: passwordForm.value.oldPassword,
+    newPassword: passwordForm.value.newPassword,
+  };
+  const res = await updateUserPasswordService(form);
+  if (res.code == 0) {
+    ElMessage.success("修改成功！");
+    passwordForm.value.oldPassword = "";
+    passwordForm.value.newPassword = "";
+    passwordForm.value.confirmPassword = "";
+  } else {
+    ElMessage.error(res.message);
+  }
+};
+const getFileList = async () => {
+  let fileList = [];
+  const res = await getSoundLibList();
+  fileList.push(...res.data);
+};
+const filteredData = computed(() => {
+  return fileList.value.filter((file) => {
+    const matchesType =
+      selectedType.value === "all" || file.name.endsWith(selectedType.value);
+    const matchesQuery = file.name.includes(searchQuery.value);
+    return matchesType && matchesQuery;
+  });
+});
+
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredData.value.slice(start, start + pageSize.value);
+});
+
+const handleSearch = () => {
+  currentPage.value = 1;
+};
+
+const handleFilter = () => {
+  currentPage.value = 1;
+};
+
+const handlePageSizeChange = () => {
+  currentPage.value = 1;
+};
+
+const handlePageChange = (page) => {
+  currentPage.value = page;
+};
+</script> 
 
 <style scoped>
 .container {
@@ -402,12 +380,12 @@ export default {
   margin: 30px auto;
   border-radius: 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #3fa4fa, #36cfdd);
 }
 .header .avatar {
-  width: 80px;
-  height: 80px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  padding: 50px 50px;
   margin: 20px 20px;
   background-color: #fff;
   border: 1px solid #fff;
@@ -415,24 +393,22 @@ export default {
 .header .under-avatar {
   width: 100%;
   display: flex;
-  flex-direction: row;
-  margin-left: 20px;
+  padding: 0 20px;
 }
 .header .left {
-  width: 600px;
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  flex: 3;
 }
 .header .upload-btn {
-  margin-top: 20px;
-  margin-left: 580px;
+  flex: 1;
 }
 .header .username {
   color: white;
   font-size: 30px;
 }
 .header .id {
+  margin-left: 20px;
   margin-top: 10px;
   color: rgb(58, 58, 58);
 }

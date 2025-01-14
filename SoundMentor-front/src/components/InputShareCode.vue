@@ -22,7 +22,7 @@
   
 <script>
 import { ref } from "vue";
-import { joinOrganizationService } from "@/api/user";
+import { joinOrganizationService } from "@/api/group";
 import { ElMessage } from "element-plus";
 
 export default {
@@ -77,12 +77,12 @@ export default {
           console.log(data);
           const response = await joinOrganizationService(data);
 
-          if (response.code === 0) {
+          if (response.code == 0) {
             ElMessage.success("加入成功！");
             this.$emit("update:dialogVisible", false);
             this.resetShareCode();
           } else {
-            ElMessage.error(response.data);
+            ElMessage.error(response.message);
           }
         } catch (error) {
           ElMessage.error(error.data || "发生错误，请重试");
