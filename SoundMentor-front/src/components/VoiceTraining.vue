@@ -2,27 +2,27 @@
   <div class="voice-training">
     <div class="upload-section">
       <el-upload
-        v-model:file-list="uploadedFile"
+        v-model:file-list="uploadedFiles"
         class="upload-demo"
         drag
-        action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-        :on-exceed="handleExceed"
-        :auto-upload="false"
-        :before-upload="beforeUpload"
-        :on-success="handleSuccess"
-        :limit="1"
+        multiple
+        :before-upload="handleFileUpload"
       >
         <h3>上传音频文件</h3>
         <el-icon color="#24a3ff" size="50"><MessageBox /></el-icon>
         <div class="el-upload__text">点击或拖拽文件到这里上传</div>
         <div class="el-upload__tip">支持格式：.mp3, .ogg, .wav</div>
-        <audio v-if="uploadedFile.length > 0" :src="uploadedFile[0].url" />
       </el-upload>
+      <audio v-if="uploadedFiles.length > 0" :src="uploadedFiles[0].url" />
     </div>
     <div class="online-record">
       <h3>在线录制</h3>
       <el-icon color="#24a3ff" size="50"><Mic /></el-icon>
-      <el-button type="primary" @click="startTraining">开始录制</el-button>
+      <el-button
+        :type="isRecording ? 'danger' : 'primary'"
+        @click="startTraining"
+        >{{ isRecording ? "停止录制" : "开始录制" }}</el-button
+      >
     </div>
   </div>
 </template>  
@@ -32,42 +32,32 @@ import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import { uploadFileService } from "@/api/file";
 import { Upload, MessageBox, Mic } from "@element-plus/icons-vue";
-const uploadedFile = ref([]);
+const uploadedFiles = ref([]);
 
-const handleExceed = (files, fileList) => {
-  fileList.splice(0, fileList.length);
-  const newFile = files[0];
-};
-
-const handleSuccess = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file.raw);
-
-  try {
-    const response = await uploadFileService(formData);
-    if (response.code == 0) {
-      ElMessage.success("文件上传成功!");
-      uploadedFile.value.push(response.data);
-      console.log(uploadedFile.value);
-    } else {
-      ElMessage.error("文件上传失败!");
-    }
-  } catch (error) {
-    console.error("Upload error:", error);
-    ElMessage.error("文件上传出错!");
-  }
-};
-
-const beforeUpload = (file) => {
-  const fileType = file.type;
-  if (fileType !== "audio/mpeg") {
+const handleFileUpload = async (file) => {
+  if (file.type !== "audio/mpeg") {
     ElMessage.error("只支持音频文件格式: .mp3");
     return false;
   }
-  return true;
+  try {
+    const response = await uploadFileService(file);
+
+    if (response.data && response.data.fileUrl) {
+      uploadedFiles.value.push({
+        name: file.name,
+        url: response.data.fileUrl,
+      });
+    }
+  } catch (error) {
+    ElMessage.error("文件上传失败，请重试！");
+  }
+  return false;
 };
 
-const startTraining = () => {};
+const isRecording = ref(false);
+const startTraining = () => {
+  isRecording.value = !isRecording.value;
+};
 </script>
 
 <style scoped>

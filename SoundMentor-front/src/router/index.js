@@ -7,6 +7,7 @@ import ProfileView from '../views/ProfileView.vue'
 import GroupView from '../views/GroupView.vue'
 import GroupDetail from '../components/GroupDetail.vue'
 import PPTView from '../views/PPTView.vue'
+import GroupMembers from '../components/GroupMembers.vue'
 //定义路由关系
 const routes = [
     {
@@ -46,7 +47,15 @@ const routes = [
         name: 'groupDetail',
         component: GroupDetail,
         meta: {
-            title: '组员详情'
+            title: '组织详情'
+        }
+    },
+    {
+        path: '/groupMembers/:id',
+        name: 'groupMembers',
+        component: GroupMembers,
+        meta: {
+            title: '成员详情'
         }
     },
 

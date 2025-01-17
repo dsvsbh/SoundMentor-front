@@ -35,47 +35,53 @@
   <Footer />
 </template>
 
-<script>
+<script setup>
 import { ref } from "vue";
 import Footer from "@/components/Footer.vue";
 import { uploadFileService } from "@/api/file";
 import { UploadFilled } from "@element-plus/icons-vue";
-export default {
-  name: "PPTView",
-  components: {
-    UploadFilled,
-    Footer,
-  },
-  setup() {
-    const uploadedFiles = ref([]);
-    return {
-      uploadedFiles,
-    };
-  },
-  methods: {
-    async handleFileUpload(file) {
-      try {
-        const response = await uploadFileService(file);
-        if (response.data && response.data.fileUrl) {
-          this.uploadedFiles.push({
-            name: file.name,
-            url: response.data.fileUrl,
-          });
-        }
-      } catch (error) {
-        this.$message.error("文件上传失败，请重试！");
-      }
-      return false;
-    },
-    generateAudio() {
-      console.log("generateAudio");
-    },
-    generatePPT() {
-      console.log("generatePPT");
-    },
-  },
+import { ElMessage } from "element-plus";
+
+const uploadedFiles = ref([]);
+
+// 上传文件的方法
+const handleFileUpload = async (file) => {
+  try {
+    const response = await uploadFileService(file);
+
+    if (response.data && response.data.fileUrl) {
+      uploadedFiles.value.push({
+        name: file.name,
+        url: response.data.fileUrl,
+      });
+    }
+  } catch (error) {
+    // 使用全局消息提醒
+    ElMessage.error("文件上传失败，请重试！");
+  }
+  return false;
 };
-</script>
+
+// 验证上传文件格式
+const beforeUpload = (file) => {
+  const isValid = ["ppt", "pptx"].includes(
+    file.name.split(".").pop().toLowerCase()
+  );
+  if (!isValid) {
+    ElMessage.error("只能上传特定格式的文件！");
+  }
+  return isValid;
+};
+
+// 功能示例
+const generateAudio = () => {
+  console.log("generateAudio");
+};
+
+const generatePPT = () => {
+  console.log("generatePPT");
+};
+</script>  
 
 <style scoped>
 .ppt-container {

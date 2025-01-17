@@ -7,8 +7,16 @@ import request from "@/utils/request";
 export const uploadFileService = (file) => {
     try {
         const token = localStorage.getItem('token');
-        const response = request.post('/file/upload', file, {
-            headers: { Authorization: token },
+
+        // 创建 FormData 对象  
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = request.post('/file/upload', formData, {
+            headers: {
+                'Authorization': token,
+                'Content-Type': 'multipart/form-data'
+            },
         });
         return response;
     } catch (error) {

@@ -94,7 +94,7 @@
   <Footer />
 </template>
 
-<script>
+<script setup>
 import {
   InfoFilled,
   Plus,
@@ -105,189 +105,143 @@ import {
   User,
 } from "@element-plus/icons-vue";
 import Footer from "@/components/Footer.vue";
-import { getOrganizationListService } from "@/api/group";
-import { ElMessage } from "element-plus";
 import {
+  getOrganizationListService,
   createOrganizationService,
   getOrganizationShareCodeService,
 } from "@/api/group";
-import { defineComponent, ref, computed, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-const typeList = ["CREATOR", "ADMIN", "USER"];
 import { formatDate } from "@/utils/TimeFromUtil";
 
-export default defineComponent({
-  components: {
-    Menu,
-    Flag,
-    Tools,
-    User,
-    InfoFilled,
-    Plus,
-    Calendar,
-    Footer,
-  },
+const typeList = ["CREATOR", "ADMIN", "USER"];
+const dialogVisible = ref(false);
+const activeButton = ref("全部组织");
+const selectedType = ref("全部组织");
+const router = useRouter();
 
-  setup() {
-    const dialogVisible = ref(false);
-    const activeButton = ref("全部组织");
-    const selectedType = ref("全部组织");
-    const router = useRouter();
-
-    const form = ref({
-      name: "",
-      description: "",
-      capacity: 2,
-    });
-
-    const rule = {
-      name: [{ required: true, message: "请输入组织名称", trigger: "blur" }],
-      description: [
-        { required: true, message: "请输入组织描述", trigger: "blur" },
-      ],
-      capacity: [
-        { required: true, message: "请输入成员人数", trigger: "blur" },
-      ],
-    };
-
-    const groupList = ref([]);
-
-    const filteredGroupList = computed(() => {
-      if (selectedType.value === "全部组织") {
-        return groupList.value;
-      }
-      return groupList.value.filter((group) => {
-        if (group.organizationRole === 2) {
-          return selectedType.value === "我创建的";
-        }
-        if (group.organizationRole === 1) {
-          return selectedType.value === "我管理的";
-        }
-        if (group.organizationRole === 0) {
-          return selectedType.value === "我加入的";
-        }
-      });
-    });
-
-    const roleLabels = {
-      0: "普通成员",
-      1: "组织管理员",
-      2: "组织创建者",
-    };
-
-    const getGroupList = async () => {
-      for (const type of typeList) {
-        try {
-          var result = await getOrganizationListService(type);
-          if (result) {
-            result.forEach((item) => {
-              item.createdTime = formatDate(item.createdTime);
-            });
-            groupList.value.push(...result);
-          } else {
-            console.error(`Invalid response for type ${type}:`, result);
-            ElMessage.error(`获取${type}组织列表失败: 响应数据无效`);
-          }
-        } catch (error) {
-          console.error("请求失败！", type, error);
-          ElMessage.error(`获取${type}组织列表失败: ` + error.message);
-        }
-      }
-    };
-    const getShareCode = async (id) => {
-      try {
-        const res = await getOrganizationShareCodeService(id);
-        console.log(res);
-        if (res) {
-          ElMessage.success(`已获取组织邀请码：${id}-${res}`);
-        } else {
-          ElMessage.error(res.message || "获取邀请码失败");
-        }
-      } catch (error) {
-        console.error("获取组织邀请码时出错：", error);
-        ElMessage.error("获取组织邀请码失败，请稍后再试。");
-      }
-    };
-    const handleGroupClick = async (id, group) => {
-      console.log(group);
-      router.push({
-        path: `/groupDetail/${id}`,
-        query: {
-          group: group,
-        },
-      });
-    };
-    const createGroup = async () => {
-      const data = {
-        name: form.value.name,
-        description: form.value.description,
-        capacity: form.value.capacity,
-      };
-      try {
-        const res = await createOrganizationService(data);
-        if (res.code == 0) {
-          ElMessage.success("创建成功");
-          dialogVisible.value = false;
-          getGroupList();
-        } else {
-          ElMessage.error(res.message);
-        }
-      } catch (error) {
-        ElMessage.error("创建组织失败: " + error.message);
-      }
-    };
-    const buttonList = ref([
-      { label: "全部组织", icon: Menu },
-      { label: "我创建的", icon: Flag },
-      { label: "我管理的", icon: Tools },
-      { label: "我加入的", icon: User },
-    ]);
-    const activeStyle = {
-      backgroundColor: "#409EFF",
-      color: "#fff",
-    };
-    const filterGroups = (type) => {
-      activeButton.value = type;
-      selectedType.value = type;
-      return groupList.value.filter((group) => {
-        switch (type) {
-          case "全部组织":
-            return true;
-          case "我创建的":
-            return group.type === "组织创建者";
-          case "我管理的":
-            return group.type === "组织管理员";
-          case "我加入的":
-            return group.type === "普通成员";
-          default:
-            return true;
-        }
-      });
-    };
-
-    onMounted(() => {
-      getGroupList();
-    });
-
-    return {
-      dialogVisible,
-      activeButton,
-      form,
-      rule,
-      groupList,
-      filteredGroupList,
-      roleLabels,
-      getGroupList,
-      createGroup,
-      filterGroups,
-      handleGroupClick,
-      getShareCode,
-      buttonList,
-      activeStyle,
-    };
-  },
+const form = ref({
+  name: "",
+  description: "",
+  capacity: 2,
 });
-</script>
+
+const rule = {
+  name: [{ required: true, message: "请输入组织名称", trigger: "blur" }],
+  description: [{ required: true, message: "请输入组织描述", trigger: "blur" }],
+  capacity: [{ required: true, message: "请输入成员人数", trigger: "blur" }],
+};
+
+const groupList = ref([]);
+
+const filteredGroupList = computed(() => {
+  if (selectedType.value === "全部组织") {
+    return groupList.value;
+  }
+  return groupList.value.filter((group) => {
+    if (group.organizationRole === 2) {
+      return selectedType.value === "我创建的";
+    }
+    if (group.organizationRole === 1) {
+      return selectedType.value === "我管理的";
+    }
+    if (group.organizationRole === 0) {
+      return selectedType.value === "我加入的";
+    }
+  });
+});
+
+const roleLabels = {
+  0: "普通成员",
+  1: "组织管理员",
+  2: "组织创建者",
+};
+
+const getGroupList = async () => {
+  for (const type of typeList) {
+    try {
+      const result = await getOrganizationListService(type);
+      if (result) {
+        result.forEach((item) => {
+          item.createdTime = formatDate(item.createdTime);
+        });
+        groupList.value.push(...result);
+      } else {
+        console.error(`Invalid response for type ${type}:`, result);
+        ElMessage.error(`获取${type}组织列表失败: 响应数据无效`);
+      }
+    } catch (error) {
+      console.error("请求失败！", type, error);
+      ElMessage.error(`获取${type}组织列表失败: ${error.message}`);
+    }
+  }
+};
+
+const getShareCode = async (id) => {
+  try {
+    const res = await getOrganizationShareCodeService(id);
+    if (res) {
+      ElMessage.success(`已获取组织邀请码：${id}-${res}`);
+    } else {
+      ElMessage.error(res.message || "获取邀请码失败");
+    }
+  } catch (error) {
+    console.error("获取组织邀请码时出错：", error);
+    ElMessage.error("获取组织邀请码失败，请稍后再试。");
+  }
+};
+
+const handleGroupClick = (id, group) => {
+  router.push({
+    path: `/groupDetail/${id}`,
+    query: {
+      group: encodeURIComponent(JSON.stringify(group)),
+    },
+  });
+};
+
+const createGroup = async () => {
+  const data = {
+    name: form.value.name,
+    description: form.value.description,
+    capacity: form.value.capacity,
+  };
+  try {
+    const res = await createOrganizationService(data);
+    if (res.code === 0) {
+      ElMessage.success("创建成功");
+      dialogVisible.value = false;
+      await getGroupList();
+    } else {
+      ElMessage.error(res.message);
+    }
+  } catch (error) {
+    ElMessage.error("创建组织失败: " + error.message);
+  }
+};
+
+const buttonList = ref([
+  { label: "全部组织", icon: Menu },
+  { label: "我创建的", icon: Flag },
+  { label: "我管理的", icon: Tools },
+  { label: "我加入的", icon: User },
+]);
+
+const activeStyle = {
+  backgroundColor: "#409EFF",
+  color: "#fff",
+};
+
+const filterGroups = (type) => {
+  activeButton.value = type;
+  selectedType.value = type;
+};
+
+onMounted(() => {
+  getGroupList();
+});
+</script> 
 
 <style scoped>
 .group-view {
