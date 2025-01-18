@@ -16,7 +16,7 @@ export const userRegisterService = (registerData) => {
 
 // 登录
 export const userLoginService = async (loginData) => {
-    const loginRes = await request.post('/openApi/user/login', JSON.stringify(loginData), {
+    const loginRes = await request.post('/openApi/user/login', loginData, {
         headers: {
             'Content-Type': 'application/json'
         }

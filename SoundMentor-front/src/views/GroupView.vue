@@ -18,7 +18,7 @@
         </el-button>
       </el-button-group>
     </div>
-    <el-space wrap style="margin-left: 30px">
+    <el-space wrap style="margin-left: 30px; gap: 10px 45px">
       <el-card class="create-card" shadow="hover" @click="dialogVisible = true">
         <el-icon size="30" style="margin-left: 15px"><Plus /></el-icon>
         <div>创建组织</div>
@@ -246,11 +246,8 @@ onMounted(() => {
 <style scoped>
 .group-view {
   padding: 50px 50px;
-  margin: 0 auto;
-  width: 1300px;
+  margin: 30px 150px;
   background-color: #ffffff;
-  margin-top: 40px;
-  margin-bottom: 40px;
   border-radius: 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   position: relative;
@@ -258,7 +255,7 @@ onMounted(() => {
 .bar {
   width: 122px;
   height: 10px;
-  background-color: #3fa0fd;
+  background: linear-gradient(135deg, #3fa4fa, #36cfdd);
   margin-bottom: 10px;
 }
 .group-view-header {
@@ -273,7 +270,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 250px;
-  width: 300px;
+  width: 310px;
   background-color: #f5fbff;
   border: 1px dashed #dedede;
   border-radius: 10px;
@@ -287,7 +284,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 250px;
-  width: 300px;
+  width: 310px;
   background-color: #ffffff;
   border: 1px solid #dedede;
   border-radius: 10px;

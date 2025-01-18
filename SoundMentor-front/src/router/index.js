@@ -8,6 +8,7 @@ import GroupView from '../views/GroupView.vue'
 import GroupDetail from '../components/GroupDetail.vue'
 import PPTView from '../views/PPTView.vue'
 import GroupMembers from '../components/GroupMembers.vue'
+import StudyView from '@/views/StudyView.vue'
 //定义路由关系
 const routes = [
     {
@@ -65,6 +66,14 @@ const routes = [
         component: PPTView,
         meta: {
             title: 'PPT制作'
+        }
+    },
+    {
+        path: '/study',
+        name: 'study',
+        component: StudyView,
+        meta: {
+            title: '语音辅助学习'
         }
     }
 ]

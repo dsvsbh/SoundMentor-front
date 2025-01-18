@@ -64,7 +64,8 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import {
   Star,
   VideoPlay,
@@ -74,136 +75,124 @@ import {
 } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { getSoundLibList } from "@/api/voice";
+
 const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-export default {
-  name: "VoiceLibrary",
-  components: {
-    Star,
-    VideoPlay,
-    Download,
-    VideoPause,
-    StarFilled,
-  },
-  data() {
-    return {
-      activeSubTab: "all",
-      searchQuery: "",
-      audioList: [
-        {
-          title: "海韵自然的男声",
-          description: "适合各类学习场景",
-          tag: "primary",
-          tagContent: "自定义",
-          rating: 4.9,
-          speed: 1.0,
-          emotion: "neutral",
-          isFavorite: false,
-          isPlaying: false,
-        },
-        {
-          title: "温柔女声",
-          description: "适合儿童教育",
-          tag: "primary",
-          tagContent: "自定义",
-          rating: 4.8,
-          speed: 1.0,
-          emotion: "happy",
-          isFavorite: false,
-          isPlaying: false,
-        },
-        {
-          title: "专业播音腔",
-          description: "适合正式场合",
-          tag: "primary",
-          tagContent: "自定义",
-          rating: 4.7,
-          speed: 1.0,
-          emotion: "neutral",
-          isFavorite: false,
-          isPlaying: false,
-        },
-        {
-          title: "活力青年音",
-          description: "适合互动教学",
-          tag: "primary",
-          tagContent: "预设",
-          rating: 4.6,
-          speed: 1.0,
-          emotion: "happy",
-          isFavorite: false,
-          isPlaying: false,
-        },
-        {
-          title: "沉稳中年音",
-          description: "适合知识讲解",
-          tag: "primary",
-          tagContent: "预设",
-          rating: 4.5,
-          speed: 1.0,
-          emotion: "neutral",
-          isFavorite: false,
-          isPlaying: false,
-        },
-        {
-          title: "情感朗读音",
-          description: "适合文学作品",
-          tag: "primary",
-          tagContent: "预设",
-          rating: 4.8,
-          speed: 1.0,
-          emotion: "neutral",
-          isFavorite: false,
-          isPlaying: false,
-        },
-      ],
-    };
-  },
-  mounted() {
-    this.getSoundLibList();
-  },
-  methods: {
-    async getSoundLibList() {
-      const res = await getSoundLibList();
-      console.log(res);
-    },
 
-    playAudio(audio) {
-      // 播放音频的逻辑
-      audio.isPlaying = !audio.isPlaying;
-    },
-    downloadAudio(audio) {
-      // 下载音频的逻辑
-    },
-    toggleFavorite(audio) {
-      if (userInfo) {
-        audio.isFavorite = !audio.isFavorite;
-      } else {
-        ElMessage.error("请先登录");
-      }
-    },
+const activeSubTab = ref("all");
+const searchQuery = ref("");
+const audioList = ref([
+  {
+    title: "海韵自然的男声",
+    description: "适合各类学习场景",
+    tag: "primary",
+    tagContent: "自定义",
+    rating: 4.9,
+    speed: 1.0,
+    emotion: "neutral",
+    isFavorite: false,
+    isPlaying: false,
   },
-  computed: {
-    filteredAudioList() {
-      return this.audioList.filter((audio) => {
-        const isFavorite =
-          this.activeSubTab === "favorites" ? audio.isFavorite : true;
+  {
+    title: "温柔女声",
+    description: "适合儿童教育",
+    tag: "primary",
+    tagContent: "自定义",
+    rating: 4.8,
+    speed: 1.0,
+    emotion: "happy",
+    isFavorite: false,
+    isPlaying: false,
+  },
+  {
+    title: "专业播音腔",
+    description: "适合正式场合",
+    tag: "primary",
+    tagContent: "自定义",
+    rating: 4.7,
+    speed: 1.0,
+    emotion: "neutral",
+    isFavorite: false,
+    isPlaying: false,
+  },
+  {
+    title: "活力青年音",
+    description: "适合互动教学",
+    tag: "primary",
+    tagContent: "预设",
+    rating: 4.6,
+    speed: 1.0,
+    emotion: "happy",
+    isFavorite: false,
+    isPlaying: false,
+  },
+  {
+    title: "沉稳中年音",
+    description: "适合知识讲解",
+    tag: "primary",
+    tagContent: "预设",
+    rating: 4.5,
+    speed: 1.0,
+    emotion: "neutral",
+    isFavorite: false,
+    isPlaying: false,
+  },
+  {
+    title: "情感朗读音",
+    description: "适合文学作品",
+    tag: "primary",
+    tagContent: "预设",
+    rating: 4.8,
+    speed: 1.0,
+    emotion: "neutral",
+    isFavorite: false,
+    isPlaying: false,
+  },
+]);
 
-        switch (this.activeSubTab) {
-          case "all":
-            return true; // 返回所有音频
-          case "preset":
-            return audio.tagContent === "预设" && isFavorite;
-          case "custom":
-            return audio.tagContent === "自定义" && isFavorite;
-          case "favorites":
-            return audio.isFavorite; // 仅返回收藏的音频
-          default:
-            return true;
-        }
-      });
-    },
-  },
-};
+onMounted(async () => {
+  await getSoundLibList();
+});
+
+async function fetchSoundLibList() {
+  const res = await getSoundLibList();
+  console.log(res);
+}
+
+function playAudio(audio) {
+  audio.isPlaying = !audio.isPlaying;
+}
+
+function downloadAudio(audio) {
+  // Implement download logic here
+}
+
+function toggleFavorite(audio) {
+  if (userInfo) {
+    audio.isFavorite = !audio.isFavorite;
+  } else {
+    ElMessage.error("请先登录");
+  }
+}
+
+const filteredAudioList = computed(() => {
+  return audioList.value.filter((audio) => {
+    const isFavorite =
+      activeSubTab.value === "favorites" ? audio.isFavorite : true;
+
+    switch (activeSubTab.value) {
+      case "all":
+        return true;
+      case "preset":
+        return audio.tagContent === "预设" && isFavorite;
+      case "custom":
+        return audio.tagContent === "自定义" && isFavorite;
+      case "favorites":
+        return audio.isFavorite;
+      default:
+        return true;
+    }
+  });
+});
 </script>
 
 <style scoped>
@@ -215,28 +204,24 @@ export default {
   align-items: center;
   gap: 20px;
   background-color: white;
-  width: 80%;
-  margin: 0 auto;
+  margin: 0 150px;
   margin-bottom: 30px;
   border-radius: 0 0 15px 15px;
 }
 
 .search-bar {
-  width: 80%;
-  max-width: 800px;
+  width: 100%;
 }
 
 .tabs {
-  width: 80%;
-  max-width: 800px;
+  width: 100%;
 }
 
 .audio-items {
-  width: 80%;
-  max-width: 800px;
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 60px;
+  gap: 20px 20px;
   justify-content: center;
   padding: 10px;
 }
@@ -245,7 +230,7 @@ export default {
   border: 1px solid #e4e7ed;
   padding: 15px;
   border-radius: 8px;
-  width: 100%;
+  width: 90%;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

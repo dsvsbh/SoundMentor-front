@@ -16,18 +16,10 @@
               <div class="el-upload__tip">支持格式：.ppt, .pptx</div>
             </div>
           </el-upload>
-          <div class="button-group">
-            <el-button type="default" @click="generateAudio"
-              >生成音频</el-button
-            >
-            <el-button type="primary" @click="generatePPT"
-              >一键生成讲解</el-button
-            >
-          </div>
+          <el-button type="primary" @click="generatePPT"
+            >一键生成讲解</el-button
+          >
         </div>
-      </div>
-      <div class="intel-chat-right">
-        <div class="title">智能对话</div>
       </div>
     </div>
     <div class="audio-controller"></div>
@@ -87,11 +79,11 @@ const generatePPT = () => {
 .ppt-container {
   background-color: #f5f7fa;
   height: 1000px;
-  padding: 0 100px;
+  padding: 0 150px;
 }
 .header {
   display: flex;
-  height: 300px;
+  height: 100%;
   padding-top: 30px;
 }
 .title {
@@ -104,18 +96,13 @@ const generatePPT = () => {
   flex: 1.5;
   background-color: #fff;
   border-radius: 10px;
-  height: 510px;
+  height: 100%;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+.upload-ppt {
+  padding: 60px;
 }
 .upload-demo {
   padding: 20px;
-}
-.intel-chat-right {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 10px;
-  height: 510px;
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-  margin-left: 20px;
 }
 </style>

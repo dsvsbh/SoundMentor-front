@@ -16,11 +16,10 @@
             action="https://jsonplaceholder.typicode.com/posts/"
             :on-success="handleAvatarSuccess"
             :on-error="handleAvatarError"
+            :before-upload="handleUpload"
             class="upload-btn"
           >
-            <el-button style="margin-right: 40px" link @click="uploadAvatar"
-              >上传头像</el-button
-            >
+            上传头像
           </el-upload>
         </div>
       </div>
@@ -203,13 +202,12 @@ import { formatDate } from "@/utils/TimeFromUtil";
 import { getSoundLibList } from "../api/voice";
 import Footer from "@/components/Footer.vue";
 import { User, Lock, Upload } from "@element-plus/icons-vue";
+import { uploadFileService } from "@/api/file";
 
 const userForm = ref({
   headImg: "",
   username: "",
   phone: "",
-  account: "",
-  email: "",
 });
 
 const passwordForm = ref({
@@ -268,6 +266,7 @@ const initialUserInfo = { ...userInfo };
 
 const isFormModified = computed(() => {
   return (
+    userForm.value.headImg !== initialUserInfo.headImg ||
     userForm.value.username !== initialUserInfo.username ||
     userForm.value.phone !== initialUserInfo.phone
   );
@@ -280,12 +279,26 @@ onMounted(() => {
   userForm.value.createdTime = formatDate(userInfo.createdTime);
 });
 
-const handleAvatarSuccess = (res) => {
-  userForm.value.headImg = res.data.url;
+const handleAvatarSuccess = () => {
+  console.log("上传成功");
+};
+const handleUpload = async (file) => {
+  try {
+    const response = await uploadFileService(file);
+
+    if (response.data && response.data.fileUrl) {
+      userForm.value.headImg = response.data.fileUrl;
+      console.log("上传成功：", userForm.value.headImg);
+    }
+  } catch (error) {
+    // 使用全局消息提醒
+    ElMessage.error("文件上传失败，请重试！");
+  }
+  return false;
 };
 
-const handleAvatarError = (err) => {
-  console.log(err);
+const handleAvatarError = (err, file) => {
+  console.error("Upload failed:", err);
 };
 
 const saveUserInfo = async () => {

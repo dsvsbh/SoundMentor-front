@@ -50,15 +50,14 @@ export default {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 20px 15px;
+  padding: 30px 15px;
   background-color: #f5f7fa;
 }
 .menu {
   margin-top: 30px;
   background-color: white;
-  width: 82.7%;
-  margin: 0 auto;
+  margin: 0 150px;
   border-radius: 15px 15px 0 0;
-  padding: 0 200px;
+  padding: 0 20px;
 }
 </style>

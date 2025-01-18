@@ -27,11 +27,11 @@ export const getSoundLibList = async () => {
 }
 
 // 是否能添加声音
-export const canAddVoice = () => {
+export const canAddVoice = async () => {
     try {
         const token = localStorage.getItem("token");
-        const res = request.post(voiceApi + "/canAddSound", {
-            header: {
+        const res = await request.post(voiceApi + "/canAddSound", {}, {
+            headers: {
                 Authorization: token,
             },
         });
@@ -44,7 +44,7 @@ export const canAddVoice = () => {
 }
 
 // 获取声音样本库声音    根据id获取声音
-export const getSoundLib = (id) => {
+export const getSoundLib = async (id) => {
     try {
         const token = localStorage.getItem("token");
         const res = request.get(voiceApi + "/getSound", {
@@ -64,7 +64,7 @@ export const getSoundLib = (id) => {
 }
 
 // 删除声音样本库声音
-export const deleteSoundLib = (idList) => {
+export const deleteSoundLib = async (idList) => {
     try {
 
         const token = localStorage.getItem("token");
