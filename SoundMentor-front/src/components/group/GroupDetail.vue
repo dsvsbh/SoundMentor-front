@@ -125,7 +125,7 @@
 </template>
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import { getOrganizationMemberListService } from "../api/group";
+import { getOrganizationMemberListService } from "../../api/group";
 import { ElMessage } from "element-plus";
 import {
   User,

@@ -1,7 +1,7 @@
 <template>
   <el-header class="header">
     <router-link to="/" class="logo">
-      <img class="logo-img" src="../assets/logo.png" alt="logo" />
+      <img class="logo-img" src="/src/assets/logo.png" alt="logo" />
       <span class="logo-text">SoundMentor</span>
     </router-link>
     <el-menu
@@ -63,9 +63,9 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import { User, Plus, Setting, Close, Edit } from "@element-plus/icons-vue";
-import loginDialog from "./LoginDialog.vue";
-import { useUserStore } from "../stores/user";
-import { logoutService } from "../api/user";
+import loginDialog from "../login/LoginDialog.vue";
+import { useUserStore } from "../../stores/user";
+import { logoutService } from "../../api/user";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import InputShareCode from "./InputShareCode.vue";

@@ -14,7 +14,7 @@ export const taskExecutionService = async (data) => {
             }
         });
 
-        return res.data;
+        return res;
 
     } catch (err) {
         console.log("任务执行错误！", err.message);

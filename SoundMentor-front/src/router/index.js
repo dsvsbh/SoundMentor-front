@@ -5,9 +5,9 @@ import Home from '../views/Home.vue'
 import DocsView from '../views/DocsView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import GroupView from '../views/GroupView.vue'
-import GroupDetail from '../components/GroupDetail.vue'
+import GroupDetail from '../components/group/GroupDetail.vue'
 import PPTView from '../views/PPTView.vue'
-import GroupMembers from '../components/GroupMembers.vue'
+import GroupMembers from '../components/group/GroupMembers.vue'
 import StudyView from '@/views/StudyView.vue'
 //定义路由关系
 const routes = [

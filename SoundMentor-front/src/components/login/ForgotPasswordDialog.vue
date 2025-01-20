@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="visible" width="400px" :close-on-click-modal="false">
     <div class="cover">
-      <img src="../assets/logo.png" alt="logo" />
+      <img src="/src/assets/logo.png" alt="logo" />
       <h2>SoundMentor</h2>
       <p>智能语言教学的引领者</p>
     </div>

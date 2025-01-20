@@ -88,7 +88,7 @@ import {
   kickUserService,
 } from "@/api/group";
 import { updateUserRoleService } from "@/api/group";
-import Footer from "@/components/Footer.vue";
+import Footer from "@/components/headFoot/Footer.vue";
 import { useRouter } from "vue-router";
 
 const visible = ref(false);

@@ -32,7 +32,6 @@ instance.interceptors.response.use(
             localStorage.removeItem('userInfo');
             localStorage.setItem('isLogin', false);
             return Promise.reject(result.data);
-            window.location.reload();
         }
         console.log(result.data.message);
         return Promise.reject(result.data);

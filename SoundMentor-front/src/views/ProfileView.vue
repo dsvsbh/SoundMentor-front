@@ -2,7 +2,6 @@
   <div class="container">
     <div class="header" @mousemove="updateBackground" :style="{ background }">
       <div>
-        <!-- 如果头像为空，则显示默认头像 -->
         <img :src="userInfo.headImg" class="avatar" />
         <div class="under-avatar">
           <div class="left">
@@ -13,7 +12,6 @@
             </div>
           </div>
           <el-upload
-            action="https://jsonplaceholder.typicode.com/posts/"
             :on-success="handleAvatarSuccess"
             :on-error="handleAvatarError"
             :before-upload="handleUpload"
@@ -126,63 +124,60 @@
         </template>
         <!-- 我的文件 -->
         <template v-if="activeTab === '我的文件'">
-          <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
-            >我的文件</text
-          >
-          <div class="file-list">
+          <div class="file-head">
+            <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
+              >我的文件</text
+            >
+
+            <div class="btn-group">
+              <el-button @click="setFileType('PPTX')" type="default"
+                >PPT</el-button
+              >
+              <el-button @click="setFileType('MP3')" type="default"
+                >音频</el-button
+              >
+              <el-button @click="setFileType('PNG')" type="default"
+                >图片</el-button
+              >
+              <el-button @click="setFileType('DOC')" type="default"
+                >文档</el-button
+              >
+            </div>
+            <el-upload
+              :before-upload="handleFile"
+              :on-success="uploadFileSuc"
+              :limit="1"
+              :on-exceed="handleExceed"
+              class="upload-file"
+            >
+              <template #trigger>
+                <el-button type="primary">上传文件</el-button>
+              </template>
+            </el-upload>
             <el-input
-              v-model="searchQuery"
-              placeholder="模糊搜索文件名"
-              @input="handleSearch"
-              clearable
-            />
-
-            <el-select
-              v-model="selectedType"
-              placeholder="选择文件类型"
-              @change="handleFilter"
-            >
-              <el-option label="全部" value="all"></el-option>
-              <el-option label="PPT" value="ppt"></el-option>
-              <el-option label="音频" value="audio"></el-option>
-              <el-option label="图片" value="image"></el-option>
-            </el-select>
-
-            <el-select
-              v-model="pageSize"
-              @change="handlePageSizeChange"
-              placeholder="选择每页条数"
-            >
-              <el-option
-                v-for="size in pageSizes"
-                :key="size"
-                :label="size"
-                :value="size"
-              ></el-option>
-            </el-select>
-
-            <el-table :data="paginatedData" style="width: 100%">
-              <el-table-column prop="name" label="文件名称"></el-table-column>
-              <el-table-column prop="size" label="文件大小"></el-table-column>
-              <el-table-column
-                prop="duration"
-                label="音频时长"
-              ></el-table-column>
-              <el-table-column
-                prop="uploadTime"
-                label="上传时间"
-              ></el-table-column>
-            </el-table>
-
-            <el-pagination
-              :current-page="currentPage"
-              :page-size="pageSize"
-              :total="filteredData.length"
-              @current-change="handlePageChange"
-              layout="total, prev, pager, next, sizes"
-              :page-sizes="pageSizes"
+              class="search-bar"
+              placeholder="搜索..."
+              v-model="searchTerm"
+              @input="fetchFiles"
+              style="margin-bottom: 20px"
             />
           </div>
+          <el-table :data="files" style="padding: 0 40px">
+            <el-table-column prop="fileName" label="文件名" />
+            <el-table-column prop="fileType" label="文件类型" />
+            <el-table-column prop="fileSize" label="文件大小" />
+            <el-table-column prop="createTime" label="创建时间" />
+          </el-table>
+          <el-pagination
+            @current-change="fetchFiles"
+            :current-page="currentPage"
+            :page-size="pageSize"
+            :page-sizes="[5, 10, 20]"
+            :total="totalFiles"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handlePageSizeChange"
+            style="padding: 0 120px"
+          />
         </template>
       </el-main>
     </el-container>
@@ -191,16 +186,16 @@
 </template>  
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { ElMessage } from "element-plus";
 import {
   updateUserInfoService,
   updateUserPasswordService,
   getUserInfoService,
+  getUserFiles,
 } from "../api/user";
 import { formatDate } from "@/utils/TimeFromUtil";
-import { getSoundLibList } from "../api/voice";
-import Footer from "@/components/Footer.vue";
+import Footer from "@/components/headFoot/Footer.vue";
 import { User, Lock, Upload } from "@element-plus/icons-vue";
 import { uploadFileService } from "@/api/file";
 
@@ -252,46 +247,36 @@ const passwordRules = {
   ],
 };
 
-const searchQuery = ref("");
-const selectedType = ref("all");
-const pageSize = ref(10);
-const currentPage = ref(1);
-const fileList = ref([]);
-const pageSizes = ref([10, 20, 30, 40]);
-
 const activeTab = ref("基本信息");
 
-const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
-const initialUserInfo = { ...userInfo };
+const userInfo = ref([{}]);
+const initialUserInfo = ref({});
+
+onMounted(async () => {
+  await getUserInfo();
+  await fetchFiles();
+});
 
 const isFormModified = computed(() => {
   return (
-    userForm.value.headImg !== initialUserInfo.headImg ||
-    userForm.value.username !== initialUserInfo.username ||
-    userForm.value.phone !== initialUserInfo.phone
+    userForm.value.username !== initialUserInfo.value.username ||
+    userForm.value.phone !== initialUserInfo.value.phone ||
+    userForm.value.headImg !== initialUserInfo.value.headImg
   );
-});
-
-onMounted(() => {
-  getUserInfo();
-  getFileList();
-  console.log(userInfo);
-  userForm.value.createdTime = formatDate(userInfo.createdTime);
 });
 
 const handleAvatarSuccess = () => {
   console.log("上传成功");
 };
+
 const handleUpload = async (file) => {
   try {
     const response = await uploadFileService(file);
-
     if (response.data && response.data.fileUrl) {
       userForm.value.headImg = response.data.fileUrl;
       console.log("上传成功：", userForm.value.headImg);
     }
   } catch (error) {
-    // 使用全局消息提醒
     ElMessage.error("文件上传失败，请重试！");
   }
   return false;
@@ -313,6 +298,7 @@ const saveUserInfo = async () => {
     const res = await updateUserInfoService(userInfo);
     if (res) {
       ElMessage.success("修改成功！");
+      await getUserInfo();
     } else {
       ElMessage.error(res.message);
       console.log(res);
@@ -321,9 +307,17 @@ const saveUserInfo = async () => {
     ElMessage.error("请求失败，请稍后重试。");
   }
 };
+
 const getUserInfo = async () => {
-  const userInfo = await getUserInfoService();
-  userForm.value = { ...userInfo };
+  const data = await getUserInfoService();
+  userForm.value.username = data.username;
+  userForm.value.phone = data.phone;
+  userForm.value.email = data.email;
+  userForm.value.name = data.name;
+  userForm.value.headImg = data.headImg;
+  initialUserInfo.value = { ...data };
+  userInfo.value = data;
+  userInfo.value.createdTime = formatDate(data.createdTime);
 };
 
 const updatePassword = async () => {
@@ -341,40 +335,49 @@ const updatePassword = async () => {
     ElMessage.error(res.message);
   }
 };
-const getFileList = async () => {
-  let fileList = [];
-  const res = await getSoundLibList();
-  fileList.push(...res.data);
+
+const files = ref([]);
+const totalFiles = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const selectedFileType = ref("PPTX");
+const searchTerm = ref("");
+
+const setFileType = (fileType) => {
+  selectedFileType.value = fileType;
+  fetchFiles();
 };
-const filteredData = computed(() => {
-  return fileList.value.filter((file) => {
-    const matchesType =
-      selectedType.value === "all" || file.name.endsWith(selectedType.value);
-    const matchesQuery = file.name.includes(searchQuery.value);
-    return matchesType && matchesQuery;
-  });
+
+const fetchFiles = async () => {
+  const form = {
+    fileTypes: selectedFileType.value ? [selectedFileType.value] : [],
+    fileName: searchTerm.value,
+    pageNum: currentPage.value,
+    pageSize: pageSize.value,
+  };
+
+  try {
+    const res = await getUserFiles(form);
+    if (res.code === 0) {
+      files.value = res.data.records;
+      totalFiles.value = res.data.total;
+    } else {
+      ElMessage.error(res.message || "获取失败");
+    }
+  } catch (error) {
+    ElMessage.error("请求失败，请稍后重试。");
+  }
+};
+
+const handlePageSizeChange = (size) => {
+  pageSize.value = size;
+  currentPage.value = 1;
+  fetchFiles();
+};
+
+watch(currentPage, () => {
+  fetchFiles();
 });
-
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return filteredData.value.slice(start, start + pageSize.value);
-});
-
-const handleSearch = () => {
-  currentPage.value = 1;
-};
-
-const handleFilter = () => {
-  currentPage.value = 1;
-};
-
-const handlePageSizeChange = () => {
-  currentPage.value = 1;
-};
-
-const handlePageChange = (page) => {
-  currentPage.value = page;
-};
 </script> 
 
 <style scoped>
@@ -426,6 +429,7 @@ const handlePageChange = (page) => {
   color: rgb(58, 58, 58);
 }
 .header .registration-date {
+  margin-left: 20px;
   margin-top: 10px;
   color: rgb(58, 58, 58);
 }
@@ -475,6 +479,21 @@ const handlePageChange = (page) => {
   border-width: 1px 0 1px 0;
   padding-top: 10px;
   border-color: #e8e8e8;
+}
+.file-head {
+  display: flex;
+  flex-direction: row;
+}
+.btn-group {
+  margin-left: 10px;
+}
+.file-head .search-bar {
+  width: 150px;
+  height: 30px;
+  margin-left: 20px;
+}
+.file-head .upload-file {
+  margin-left: 20px;
 }
 </style>
 

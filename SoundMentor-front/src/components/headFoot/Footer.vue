@@ -2,11 +2,20 @@
   <el-footer class="footer">
     <div class="footer-container">
       <div class="footer-content">
+        <div
+          class="top-bar"
+          style="
+            height: 3px;
+            width: 1100px;
+            background: linear-gradient(to right, #e0e3e7, #f0f2f5);
+          "
+        ></div>
         <el-row :gutter="10" style="width: 1100px">
           <!-- 关于我们 -->
           <el-col :span="6">
             <div class="footer-section">
               <h3>{{ footerData.about.title }}</h3>
+              <div class="bar"></div>
               <p v-for="(item, index) in footerData.about.items" :key="index">
                 {{ item }}
               </p>
@@ -17,6 +26,7 @@
           <el-col :span="5">
             <div class="footer-section">
               <h3>{{ footerData.services.title }}</h3>
+              <div class="bar"></div>
               <ul>
                 <li
                   v-for="(item, index) in footerData.services.items"
@@ -41,6 +51,7 @@
           <el-col :span="8">
             <div class="footer-section">
               <h3>{{ footerData.contact.title }}</h3>
+              <div class="bar"></div>
               <p v-for="(item, index) in footerData.contact.items" :key="index">
                 <el-icon color="#79b2ff">
                   <component :is="item.icon" />
@@ -54,13 +65,14 @@
           <el-col :span="5">
             <div class="footer-section">
               <h3>{{ footerData.social.title }}</h3>
+              <div class="bar"></div>
               <div class="social-links">
                 <div
                   v-for="(item, index) in footerData.social.items"
                   :key="index"
                   class="social-item"
                 >
-                  <el-icon color="#79b2ff">
+                  <el-icon color="#79b2ff" style="margin-top: 20px">
                     <component :is="item.icon" />
                   </el-icon>
                   <p>{{ item.text }}</p>
@@ -72,7 +84,7 @@
       </div>
 
       <div class="copyright">
-        <p>© 2024 AI语言合成教学平台 版权所有</p>
+        <text>© 2024 AI语言合成教学平台 版权所有</text>
       </div>
     </div>
   </el-footer>
@@ -179,7 +191,11 @@ export default {
   margin-bottom: 20px;
   font-weight: bold;
 }
-
+.footer-section .bar {
+  height: 3px;
+  width: 40px;
+  background: linear-gradient(to right, #46b1f5, #39c4e5);
+}
 .footer-section p,
 .footer-section li {
   color: var(--el-text-color-regular);
@@ -225,7 +241,5 @@ export default {
   text-align: center;
   color: var(--el-text-color-secondary);
   border-top: 1px solid var(--el-border-color-lighter);
-  height: 50px;
-  padding-bottom: 10px;
 }
 </style> 

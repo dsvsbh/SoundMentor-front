@@ -2,7 +2,7 @@
   <el-dialog v-model="visible" width="400px" @close="handleClose">
     <div v-if="isLogin">
       <div class="cover">
-        <img src="../assets/logo.png" alt="logo" />
+        <img src="/src/assets/logo.png" alt="logo" />
         <h2>SoundMentor</h2>
         <p>智能语言教学的引领者</p>
       </div>
@@ -62,7 +62,7 @@
     </div>
     <div class="register" v-else>
       <div class="cover">
-        <img src="../assets/logo.png" alt="logo" />
+        <img src="/src/assets/logo.png" alt="logo" />
         <h2>SoundMentor</h2>
         <p>智能语言教学的引领者</p>
       </div>
@@ -316,7 +316,9 @@ export default {
     handleClose() {
       this.visible = false;
       this.$router.push("/");
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     },
   },
 };

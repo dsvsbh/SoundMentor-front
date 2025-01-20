@@ -50,9 +50,10 @@
         <el-icon color="#24a3ff" size="50"><Mic /></el-icon>
         <el-button
           :type="isRecording ? 'danger' : 'primary'"
-          @click="startRecord"
-          >{{ isRecording ? "停止录制" : "开始录制" }}</el-button
+          @click="toggleRecording"
         >
+          {{ isRecording ? "停止录音" : "开始录音" }}
+        </el-button>
       </div>
     </div>
     <div class="training-list" v-if="uploadedFiles.length > 0">
@@ -62,18 +63,30 @@
         <el-table-column prop="size" label="大小" />
         <el-table-column prop="status" label="状态" />
         <el-table-column prop="function" label="操作">
-          <text style="color: #409eff">删除</text>
+          <template v-slot="{ row }">
+            <text style="color: #409eff" @click="confirmDelete(row.name)"
+              >删除</text
+            >
+          </template>
         </el-table-column>
       </el-table>
       <el-button type="primary" @click="startTraining" class="start-btn"
         >开始训练</el-button
       >
     </div>
+    <el-dialog title="确认删除" :visible="dialogVisible" @close="handleClose">
+      <span>您确定要删除此音频文件吗？</span>
+      <span class="dialog-footer">
+        <el-button @click="handleClose">取消</el-button>
+        <el-button type="primary" @click="deleteVoice">确认</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>  
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { v4 as uuidv4 } from "uuid";
 import { ElMessage } from "element-plus";
 import { uploadFileService } from "@/api/file";
 import { canAddVoice } from "@/api/voice";
@@ -82,7 +95,10 @@ import { Upload, MessageBox, Mic } from "@element-plus/icons-vue";
 const uploadedFiles = ref([]);
 
 const handleFileUpload = async (file) => {
-  if (file.type !== "audio/mpeg") {
+  const fileType = file.type;
+
+  if (fileType !== "audio/mpeg") {
+    console.log(fileType);
     ElMessage.error("只支持音频文件格式: .mp3");
     return false;
   }
@@ -106,10 +122,51 @@ const handleFileUpload = async (file) => {
   }
   return false;
 };
+
 // 录制按钮
 const isRecording = ref(false);
-const startRecord = () => {
-  isRecording.value = !isRecording.value;
+let mediaRecorder;
+let audioChunks = [];
+//开始录制
+const startRecording = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+
+  mediaRecorder.start();
+  isRecording.value = true;
+
+  mediaRecorder.ondataavailable = (event) => {
+    audioChunks.push(event.data);
+  };
+};
+//停止录制
+const stopRecording = () => {
+  mediaRecorder.stop();
+  isRecording.value = false;
+
+  mediaRecorder.onstop = async () => {
+    const audioBlob = new Blob(audioChunks, { type: "audio/mp3" });
+    audioChunks = [];
+
+    // 使用 UUID 生成文件名
+    const fileName = `${uuidv4()}.mp3`;
+
+    // 创建并下载 MP3 文件
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    handleFileUpload(audioBlob);
+  };
+};
+
+//处理按钮状态逻辑
+const toggleRecording = () => {
+  isRecording.value ? stopRecording() : startRecording();
 };
 
 // 训练逻辑
@@ -121,10 +178,23 @@ const startTraining = async () => {
     return false;
   }
   // 构造数据
+  const url = uploadedFiles.value[0].url;
+  const lastSlashIndex = url.lastIndexOf("/");
+
+  // 从最后一个 '/' 后一个字符开始提取子字符串
+  const subStringAfterLastSlash = url.substring(lastSlashIndex + 1);
+
+  // 在子字符串中找到最后一个 '.' 的位置
+  const lastDotIndex = subStringAfterLastSlash.lastIndexOf(".");
+
+  // 提取最后一个 '.' 前的部分
+  const name = subStringAfterLastSlash.substring(0, lastDotIndex);
+
   const data = {
     type: "VOICE_TRAIN",
     taskType: "VOICE_TRAIN",
-    soundPath: uploadedFiles.value[0].url,
+    soundPath: url,
+    soundName: name,
   };
   try {
     const response = await taskExecutionService(data);
@@ -163,7 +233,25 @@ const searchQueryStatus = async () => {
     ElMessage.success("训练完成！");
   }
 };
-
+//删除上传音频
+const dialogVisible = ref(false);
+const fileToDelete = ref(null);
+const confirmDelete = (name) => {
+  fileToDelete.value = name;
+  dialogVisible.value = true;
+  console.log(dialogVisible.value);
+};
+const deleteVoice = () => {
+  uploadedFiles.value = uploadedFiles.value.filter(
+    (obj) => obj.name !== fileToDelete.value
+  );
+  fileToDelete.value = null;
+  dialogVisible.value = false;
+};
+const handleClose = () => {
+  fileToDelete.value = null;
+  dialogVisible.value = false;
+};
 // test
 const steps = [1, 2, 3, 4];
 const currentStep = ref(1);

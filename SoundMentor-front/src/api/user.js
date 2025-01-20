@@ -1,6 +1,7 @@
 // 导入请求工具
 import request from '@/utils/request.js'
 import axios from 'axios'
+import { ElMessage } from 'element-plus';
 
 //                        免登接口
 
@@ -101,5 +102,34 @@ export const updateUserPasswordService = (passwordInfo) => {
 
     });
     return response.data;
+}
+
+// 用户文件列表（条件动态分页）
+// {
+//     "fileTypes": [
+//         "MP3"
+//     ],
+//     "fileName": "string",
+//     "pageNum": 0,
+//     "pageSize": 0
+// }
+export const getUserFiles = (pageDTO) => {
+    try {
+        const token = localStorage.getItem('token');
+        const res = request.post('/user/files', pageDTO, {
+            headers: {
+                Authorization: token,
+            }
+        })
+        if (res.code == 0) {
+            console.log("获取文件成功");
+            return res;
+        } else {
+            console.log("获取失败！");
+            return res;
+        }
+    } catch (err) {
+        ElMessage.error(err.message);
+    }
 }
 

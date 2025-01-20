@@ -53,13 +53,14 @@
         </el-row>
       </div>
     </el-main>
+    <el-backtop :right="100" :bottom="100" />
     <Footer />
   </div>
 </template>  
 
 <script>
-import loginDialog from "../components/LoginDialog.vue";
-import Footer from "../components/Footer.vue";
+import loginDialog from "../components/login/LoginDialog.vue";
+import Footer from "../components/headFoot/Footer.vue";
 import img1 from "../assets/static/1.png";
 import img2 from "../assets/static/2.png";
 import img3 from "../assets/static/3.png";
@@ -120,6 +121,7 @@ export default {
           title: "语言学习辅助",
           description: "多种语言学习助手，提升学习效果。",
           icon: Cellphone,
+          path: "/study",
         },
       ],
       statistics: [

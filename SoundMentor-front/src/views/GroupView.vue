@@ -104,7 +104,7 @@ import {
   Tools,
   User,
 } from "@element-plus/icons-vue";
-import Footer from "@/components/Footer.vue";
+import Footer from "@/components/headFoot/Footer.vue";
 import {
   getOrganizationListService,
   createOrganizationService,

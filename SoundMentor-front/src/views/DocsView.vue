@@ -24,25 +24,13 @@
   </div>
 </template>  
 
-<script>
-import Footer from "../components/Footer.vue";
-import VoiceLibrary from "../components/VoiceLibrary.vue";
-import VoiceTraining from "../components/VoiceTraining.vue";
+<script setup>
+import Footer from "../components/headFoot/Footer.vue";
+import VoiceLibrary from "../components/voice/VoiceLibrary.vue";
+import VoiceTraining from "../components/voice/VoiceTraining.vue";
+import { ref } from "vue";
 
-export default {
-  name: "DocsView",
-  components: {
-    Footer,
-    VoiceLibrary,
-    VoiceTraining,
-  },
-  data() {
-    return {
-      activeTab: "voice-library",
-    };
-  },
-  methods: {},
-};
+const activeTab = ref("voice-library");
 </script>  
 
 <style scoped>
