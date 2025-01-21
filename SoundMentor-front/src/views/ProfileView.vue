@@ -27,19 +27,31 @@
     <el-container>
       <el-aside class="aside">
         <el-menu :default-active="activeTab" @select="handleSelect">
-          <el-menu-item @click="activeTab = '基本信息'" index="1">
+          <el-menu-item
+            :style="activeTab === '基本信息' ? activeTabColor : {}"
+            @click="activeTab = '基本信息'"
+            index="1"
+          >
             <template #title>
               <el-icon><User /></el-icon>
               <span>基本信息</span>
             </template>
           </el-menu-item>
-          <el-menu-item @click="activeTab = '修改密码'" index="2">
+          <el-menu-item
+            :style="activeTab === '修改密码' ? activeTabColor : {}"
+            @click="activeTab = '修改密码'"
+            index="2"
+          >
             <template #title>
               <el-icon><Lock /></el-icon>
               <span>修改密码</span>
             </template>
           </el-menu-item>
-          <el-menu-item @click="activeTab = '我的文件'" index="3">
+          <el-menu-item
+            :style="activeTab === '我的文件' ? activeTabColor : {}"
+            @click="activeTab = '我的文件'"
+            index="3"
+          >
             <template #title>
               <el-icon><Upload /></el-icon>
               <span>我的文件</span>
@@ -128,20 +140,24 @@
             <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
               >我的文件</text
             >
-
             <div class="btn-group">
-              <el-button @click="setFileType('PPTX')" type="default"
-                >PPT</el-button
+              <el-button
+                v-for="type in ['PPTX', 'MP3', 'PNG', 'DOC']"
+                :key="type"
+                @click="setFileType(type)"
+                type="default"
+                :style="isActive(type) ? activeStyle : {}"
               >
-              <el-button @click="setFileType('MP3')" type="default"
-                >音频</el-button
-              >
-              <el-button @click="setFileType('PNG')" type="default"
-                >图片</el-button
-              >
-              <el-button @click="setFileType('DOC')" type="default"
-                >文档</el-button
-              >
+                {{
+                  type === "PPTX"
+                    ? "PPT"
+                    : type === "MP3"
+                    ? "音频"
+                    : type === "PNG"
+                    ? "图片"
+                    : "文档"
+                }}
+              </el-button>
             </div>
             <el-upload
               :before-upload="handleFile"
@@ -160,9 +176,10 @@
               v-model="searchTerm"
               @input="fetchFiles"
               style="margin-bottom: 20px"
-            />
+              ><template #prepend> <el-button :icon="Search" /> </template
+            ></el-input>
           </div>
-          <el-table :data="files" style="padding: 0 40px">
+          <el-table :data="formattedFiles" style="padding: 0 40px">
             <el-table-column prop="fileName" label="文件名" />
             <el-table-column prop="fileType" label="文件类型" />
             <el-table-column prop="fileSize" label="文件大小" />
@@ -176,7 +193,7 @@
             :total="totalFiles"
             layout="total, sizes, prev, pager, next, jumper"
             @size-change="handlePageSizeChange"
-            style="padding: 0 120px"
+            style="padding: 0 120px; padding-top: 20px"
           />
         </template>
       </el-main>
@@ -196,7 +213,7 @@ import {
 } from "../api/user";
 import { formatDate } from "@/utils/TimeFromUtil";
 import Footer from "@/components/headFoot/Footer.vue";
-import { User, Lock, Upload } from "@element-plus/icons-vue";
+import { User, Lock, Upload, Search } from "@element-plus/icons-vue";
 import { uploadFileService } from "@/api/file";
 
 const userForm = ref({
@@ -248,7 +265,9 @@ const passwordRules = {
 };
 
 const activeTab = ref("基本信息");
-
+const activeTabColor = {
+  backgroundColor: "#ecf5ff",
+};
 const userInfo = ref([{}]);
 const initialUserInfo = ref({});
 
@@ -342,12 +361,37 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const selectedFileType = ref("PPTX");
 const searchTerm = ref("");
+// 文件类型映射
+const fileTypeMap = {
+  0: "MP3",
+  1: "DOC",
+  2: "DOCX",
+  3: "PDF",
+  4: "JPG",
+  5: "PPTX",
+  6: "PNG",
+};
+const activeStyle = {
+  backgroundColor: "#409EFF", // 活动状态的背景色
+  color: "#fff", // 活动状态的字体颜色
+};
 
+// 检查按钮是否被选中
+const isActive = (fileType) => {
+  return selectedFileType.value === fileType; // 判断当前文件类型是否是选中状态
+};
 const setFileType = (fileType) => {
   selectedFileType.value = fileType;
   fetchFiles();
 };
-
+const formattedFiles = computed(() => {
+  return files.value.map((file) => ({
+    ...file,
+    fileType: fileTypeMap[file.fileType] || "未知",
+    createTime: file.createTime.split("T")[0],
+    fileSize: (file.fileSize / 1024).toFixed(1) + "B",
+  }));
+});
 const fetchFiles = async () => {
   const form = {
     fileTypes: selectedFileType.value ? [selectedFileType.value] : [],
@@ -358,7 +402,7 @@ const fetchFiles = async () => {
 
   try {
     const res = await getUserFiles(form);
-    if (res.code === 0) {
+    if (res.code == 0) {
       files.value = res.data.records;
       totalFiles.value = res.data.total;
     } else {
@@ -415,6 +459,7 @@ watch(currentPage, () => {
   display: flex;
   flex-direction: row;
   flex: 3;
+  padding-left: 50px;
 }
 .header .upload-btn {
   flex: 1;

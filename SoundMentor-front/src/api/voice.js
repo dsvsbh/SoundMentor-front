@@ -2,32 +2,35 @@ import request from "@/utils/request";
 import { ElMessage } from "element-plus";
 const voiceApi = "/soundlib";
 
-//获取用户和预设声音样本库声音 
-export const getSoundLib = async (type) => {
+// 获取用户和预设声音样本库声音  
+export const getSoundLib = async (data) => {
+    const url = '/getSoundLib';
+    const requestData = {
+        type: data.type,
+        current: data.current,
+        size: data.size,
+        userId: data.userId,
+        status: data.status,
+        soundName: data.soundName
+    };
     try {
         const token = localStorage.getItem("token");
-        const res = await request.get({
-            url: voiceApi + "/getSoundLib",
+        const response = await request.post(voiceApi + url, requestData, {
             headers: {
-                Authorization: token,
-            },
-            data: JSON.stringify({
-                type: type
-            })
+                Authorization: token
+            }
         });
 
-        if (res.code == 0) {
-            console.log("请求成功");
-            return res.data;
-        } else {
-            console.log("请求失败", res.message);
-            return res;
+        if (response.code == "0") {
+            console.log("请求成功！")
+            return response;
         }
-    } catch (err) {
-        ElMessage.error("请求错误！", err.message);
-        return res;
+
+        const data = await response.json();
+    } catch (error) {
+        console.error('Error fetching sound library:', error);
     }
-}
+};
 // 获取声音样本库声音列表
 export const getSoundLibList = async () => {
     try {

@@ -32,6 +32,27 @@ export const getTaskDetailById = async (taskId) => {
             headers: { Authorization: token },
         });
         if (res.code == 0) {
+            return res;
+        }
+        else {
+            console.log(res.message);
+        }
+    } catch (err) {
+        console.log("获取任务详情出错！", err.message);
+    }
+}
+
+// 获取ppt任务结果
+export const getPptTask = async (userPptId) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("认证失败！");
+        }
+        const res = await request.get(`/task/getPptTask/${userPptId}`, {
+            headers: { Authorization: token },
+        });
+        if (res.code == 0) {
             return res.data;
         }
         else {

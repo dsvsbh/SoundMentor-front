@@ -121,7 +121,7 @@ export const getUserFiles = (pageDTO) => {
                 Authorization: token,
             }
         })
-        if (res.code == 0) {
+        if (res.code == "0") {
             console.log("获取文件成功");
             return res;
         } else {

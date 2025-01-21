@@ -6,6 +6,8 @@
         placeholder="搜索音频库"
         prefix-icon="el-icon-search"
         v-model="searchQuery"
+        @input="getAllSoundLib"
+        ><template #prepend> <el-button :icon="Search" /> </template
       ></el-input>
     </div>
     <!-- 标签页 -->
@@ -25,19 +27,19 @@
         :key="index"
       >
         <div class="audio-card-header">
-          <h3>{{ audio.title }}</h3>
+          <h3>{{ audio.soundName }}</h3>
           <el-tag color="#79b2ff" effect="dark">
             <component :is="audio.tag" />
             {{ audio.tagContent }}
           </el-tag>
         </div>
         <p>{{ audio.description }}</p>
-        <el-rate v-model="audio.rating" disabled></el-rate>
         <el-slider
           v-model="audio.speed"
           max="2"
           min="0.5"
           step="0.1"
+          @change="updatePlaybackRate"
         ></el-slider>
         <div class="action-buttons">
           <el-button @click="playAudio(audio)">
@@ -49,7 +51,7 @@
             </el-icon>
             {{ audio.isPlaying ? "暂停" : "试听" }}
           </el-button>
-          <el-button @click="downloadAudio(audio)">
+          <el-button @click="audio.soundUrl">
             <el-icon color="#24a3ff"><Download /></el-icon>
             下载
           </el-button>
@@ -65,17 +67,26 @@
         </div>
       </div>
     </div>
+    <el-pagination
+      v-model:current-page="currentPage"
+      :page-size="pageSize"
+      :page-sizes="[3, 6, 9, 12]"
+      :total="totalAudioCount"
+      layout="total, prev, pager, next, jumper"
+      @current-change="handleCurrentChange"
+    ></el-pagination>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import {
   Star,
   VideoPlay,
   Download,
   VideoPause,
   StarFilled,
+  Search,
 } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { getSoundLibList } from "@/api/voice";
@@ -85,63 +96,84 @@ const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
 const activeSubTab = ref("all");
 const searchQuery = ref("");
-const audioList = ref([
-  {
-    title: "海韵自然的男声",
-    description: "适合各类学习场景",
-    tag: "primary",
-    tagContent: "自定义",
-    rating: 4.9,
-    speed: 1.0,
-    emotion: "neutral",
-    isFavorite: false,
-    isPlaying: false,
-  },
-]);
+const audioList = ref([]);
 
-const preAudio = ref([]);
-const userAudio = ref([]);
 onMounted(async () => {
-  fetchSoundLibList();
-  const data = await getAllSoundLib(0);
-  console.log("11111", data);
-  if (data !== undefined) {
-    preAudio.value = await getAllSoundLib(0);
-    userAudio.value = await getAllSoundLib(1);
-    audioList.value = await getAllSoundLib(2);
-    // 增加tagContent
-    preAudio.forEach((audio) => {
-      audio.tagContent = "预设";
-    });
+  const preAudio = await getAllSoundLib(0); // 查询系统预设声音
+  console.log(preAudio);
+  const userAudio = await getAllSoundLib(1); // 查询用户自训练声音
+  const allAudio = await getAllSoundLib(2); // 查询所有音频
 
-    userAudio.forEach((audio) => {
-      audio.tagContent = "自定义";
-    });
-
-    // 合并所有音频数据
-    audioList.value = [...preAudio, ...userAudio, ...allAudio];
-  }
+  audioList.value = [...allAudio];
+  console.log(audioList.value);
 });
-
-async function fetchSoundLibList() {
-  const res = await getSoundLibList(); //获取用户训练声音
-  console.log(res);
-}
-
+const typeMapping = {
+  0: "预设",
+  1: "自定义",
+};
 const getAllSoundLib = async (type) => {
-  const data = getSoundLib(type);
-  if (data !== null) {
-    audioList.value = data;
+  const form = {
+    type: type,
+    current: currentPage.value,
+    size: pageSize.value,
+    userId: userInfo ? userInfo.id : 0,
+    status: 2,
+    soundName: searchQuery.value || "",
+  };
+  try {
+    const response = await getSoundLib(form);
+    if (response.code === "0") {
+      const records = response.data.records;
+      totalAudioCount.value = response.data.total;
+      records.forEach((audio) => {
+        audio.isPlaying = false;
+        audio.speed = 1;
+      });
+      audioList.value = records.map((audio) => ({
+        ...audio,
+        tagContent: typeMapping[audio.type],
+      }));
+
+      return records;
+    } else {
+      ElMessage.error(response.message);
+      return [];
+    }
+  } catch (error) {
+    console.error("获取音频库失败:", error);
+    return [];
+  }
+};
+let audioElement = null;
+
+const playAudio = (audio) => {
+  if (!audioElement) {
+    audioElement = new Audio(audio.value.soundUrl);
+    audioElement.playbackRate = audio.value.speed;
+
+    console.log(audio.value);
+    if (audio.value.isPlaying) {
+      audioElement.pause();
+    } else {
+      audioElement.play();
+    }
+
+    audio.value.isPlaying = !audio.value.isPlaying;
   }
 };
 
-function playAudio(audio) {
-  audio.isPlaying = !audio.isPlaying;
-}
+const updatePlaybackRate = () => {
+  if (audioElement) {
+    audioElement.playbackRate = audio.value.speed;
+  }
+};
 
-function downloadAudio(audio) {
-  // Implement download logic here
-}
+onBeforeUnmount(() => {
+  if (audioElement) {
+    audioElement.pause();
+    audioElement = null;
+  }
+});
 
 function toggleFavorite(audio) {
   if (userInfo) {
@@ -173,24 +205,24 @@ const filteredAudioList = computed(() => {
   }
 });
 
-// test
-// 获取音频元素
-const audio = document.getElementById("myAudio");
+const currentPage = ref(1);
+const pageSize = ref(3);
+const totalAudioCount = ref(0);
 
-// 播放音频
-function playAudio2() {
-  audio.play();
+async function fetchAllAudio() {
+  await getAllSoundLib(0);
+  await getAllSoundLib(1);
+  const allAudio = await getAllSoundLib(2);
+  audioList.value = [...allAudio];
 }
 
-// 暂停音频
-function pauseAudio() {
-  audio.pause();
+function handleCurrentChange(newPage) {
+  currentPage.value = newPage;
+  fetchAllAudio();
 }
-
-// 设置音频音量
-function setVolume(volume) {
-  audio.volume = volume;
-}
+watch(currentPage, () => {
+  fetchAllAudio();
+});
 </script>
 
 <style scoped>
