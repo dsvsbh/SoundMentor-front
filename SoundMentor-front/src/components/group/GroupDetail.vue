@@ -56,14 +56,25 @@
         <div class="right-btns">
           <el-input
             placeholder="搜索文件"
-            style="width: 200px"
+            style="width: 200px; height: 33px"
             v-model="searchQuery"
             ><template #prepend> <el-button :icon="Search" /> </template
           ></el-input>
-          <el-button type="primary" :icon="UploadFilled">上传文件</el-button>
+          <el-button type="primary" :icon="UploadFilled" @click="upload"
+            >上传文件</el-button
+          >
         </div>
       </div>
       <div class="file-list">
+        <template v-if="paginatedFiles.length == 0">
+          <div style="padding: 0 355px">
+            <el-empty
+              description="组织文件为空，快去上传吧"
+              style="width: 200px"
+            >
+            </el-empty>
+          </div>
+        </template>
         <div class="file-item" v-for="file in paginatedFiles" :key="file.id">
           <img src="" alt="" class="ppt-first-page" />
           <!-- 文件展示 -->
@@ -122,11 +133,20 @@
       </div>
     </div>
   </div>
+
+  <div v-if="isUploadVisible">11111111111111111111</div>
+
+  <Footer />
 </template>
+
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import { getOrganizationMemberListService } from "../../api/group";
+import {
+  getOrganizationMemberListService,
+  getGroupFiles,
+} from "../../api/group";
 import { ElMessage } from "element-plus";
+import Footer from "@/components/headFoot/Footer.vue";
 import {
   User,
   Files,
@@ -153,7 +173,6 @@ const roleLabels = {
   2: "组织创建者",
 };
 onMounted(async () => {
-  console.log(group.value);
   members.value = await getOrganizationMemberListService(organizationId.value);
   getCurrentRole();
 });
@@ -161,7 +180,6 @@ onMounted(async () => {
 // 获取当前用户角色
 const currentRole = ref(0);
 const getCurrentRole = () => {
-  console.log(members.value);
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   for (const member of members.value) {
     if (member.name === userInfo.name) {
@@ -182,56 +200,81 @@ const getTagType = (role) => {
   }
 };
 
+let isUploadVisible = ref(false);
+// 上传用户文件至组织
+const upload = (file) => {
+  isUploadVisible = true;
+  console.log(11111);
+};
+
 // 文件过滤
-const buttonList = ["全部", "PPT", "音频", "图片"];
-const activeButton = ref("全部");
+const buttonList = ["全部", "PPT", "音频", "图片", "文档"]; // 筛选按钮列表
+const activeButton = ref("全部"); // 当前激活的筛选按钮
 const activeStyle = {
   backgroundColor: "#409EFF",
   color: "#fff",
 };
-// 分页相关变量
-const itemsPerPage = 6;
-const currentPage = ref(1);
-// 搜索查询
-const searchQuery = ref("");
-// 计算筛选后的文件列表
-const filteredFiles = computed(() => {
-  let result = files.value;
+const itemsPerPage = ref(6); // 每页显示的文件条数
+const currentPage = ref(1); // 当前页面
+const searchQuery = ref(""); // 搜索查询内容
+const files = ref([]); // 用于存储从API获取的文件记录
+const totalPages = ref(0); // 存储总页数
 
-  // 根据搜索条件过滤文件
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter((file) => file.name.toLowerCase().includes(query));
-  }
-
-  // 根据活动按钮过滤文件类型
-  if (activeButton.value !== "全部") {
-    result = result.filter((file) => {
-      const fileExtension = file.name.split(".").pop().toLowerCase();
-
-      if (activeButton.value === "PPT") {
-        return fileExtension === "ppt" || fileExtension === "pptx";
-      } else if (activeButton.value === "音频") {
-        return fileExtension === "mp3" || fileExtension === "wav";
-      } else if (activeButton.value === "图片") {
-        return ["jpg", "jpeg", "png", "gif"].includes(fileExtension);
-      }
-      return false; // 默认不匹配
-    });
-  }
-
-  return result;
+// 在组件挂载时获取组员信息并初始化文件
+onMounted(async () => {
+  members.value = await getOrganizationMemberListService(organizationId.value); // 获取组员列表
+  getCurrentRole(); // 获取当前用户角色
+  fetchFiles(); // 初始获取文件
 });
 
-// 计算总页数
-const totalPages = computed(() =>
-  Math.ceil(filteredFiles.value.length / itemsPerPage)
-);
+// 根据当前筛选条件和分页请求文件
+const fetchFiles = async () => {
+  const orgId = parseInt(organizationId.value, 10);
 
-// 获取当前页的文件
+  // 构建请求参数
+  const formData = {
+    organizationId: orgId,
+    fileTypes: getSelectedFileTypes(),
+    fileName: searchQuery.value,
+    pageNum: currentPage.value,
+    pageSize: itemsPerPage.value,
+  };
+
+  try {
+    const response = await getGroupFiles(formData);
+    if (response.code == "0") {
+      files.value = response.data.records;
+      totalPages.value = response.data.pages; // 更新总页数
+    } else {
+      ElMessage.error(response.message);
+    }
+  } catch (error) {
+    ElMessage.error("获取文件时出错");
+  }
+};
+
+// 根据当前激活的按钮获取选中的文件类型
+const getSelectedFileTypes = () => {
+  const typeMap = {
+    // 文件类型映射
+    全部: ["MP3", "DOC", "DOCX", "PDF", "PPTX", "PNG", "JPG"],
+    PPT: ["PPT", "PPTX"],
+    音频: ["MP3"],
+    图片: ["PNG", "JPG"],
+    文档: ["DOC", "DOCX", "PDF"],
+  };
+  return typeMap[activeButton.value] || []; // 返回对应文件类型
+};
+
+// 监听搜索框、激活按钮和当前页码的变化，重新获取文件
+watch([searchQuery, activeButton, currentPage], fetchFiles);
+
+// 计算当前页面显示的文件
 const paginatedFiles = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  return filteredFiles.value.slice(start, start + itemsPerPage);
+  return files.value.slice(
+    (currentPage.value - 1) * itemsPerPage.value,
+    currentPage.value * itemsPerPage.value
+  );
 });
 
 // 获取分页按钮
@@ -280,117 +323,12 @@ watch(activeButton, () => {
 const filterFiles = (button) => {
   activeButton.value = button;
 };
-
-// 获取文件列表
-const files = ref([
-  {
-    id: 1,
-    name: "项目计划.docx",
-    size: 5,
-    downloadCount: 12,
-    memberName: "张三",
-    memberRole: 1,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 2,
-    name: "产品展示.pptx",
-    size: 10,
-    downloadCount: 8,
-    memberName: "李四",
-    memberRole: 0,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 3,
-    name: "市场分析.pdf",
-    size: 4,
-    downloadCount: 5,
-    memberName: "王五",
-    memberRole: 2,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 4,
-    name: "预算报告.xlsx",
-    size: 3,
-    downloadCount: 10,
-    memberName: "赵六",
-    memberRole: 1,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 5,
-    name: "会议记录.txt",
-    size: 2,
-    downloadCount: 15,
-    memberName: "钱七",
-    memberRole: 0,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 6,
-    name: "设计草图.ai",
-    size: 8,
-    downloadCount: 20,
-    memberName: "孙八",
-    memberRole: 1,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 7,
-    name: "用户反馈.docx",
-    size: 6,
-    downloadCount: 13,
-    memberName: "周九",
-    memberRole: 0,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 8,
-    name: "测试报告.pdf",
-    size: 4,
-    downloadCount: 9,
-    memberName: "吴十",
-    memberRole: 2,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 9,
-    name: "开发文档.doc",
-    size: 5,
-    downloadCount: 7,
-    memberName: "郑十一",
-    memberRole: 1,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-  {
-    id: 10,
-    name: "数据分析.xlsx",
-    size: 3,
-    downloadCount: 11,
-    memberName: "冯十二",
-    memberRole: 0,
-    imageUrl: "https://via.placeholder.com/150",
-    memberImage: "https://via.placeholder.com/150",
-  },
-]);
 </script>
 <style scoped>
 .container {
   padding: 20px 50px;
   margin: 0 auto;
   width: 950px;
-  margin-bottom: 40px;
 }
 .header {
   background: linear-gradient(to right, #f9fcfe, #edf6fd);

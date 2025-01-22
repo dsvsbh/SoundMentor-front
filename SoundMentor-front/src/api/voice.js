@@ -25,8 +25,6 @@ export const getSoundLib = async (data) => {
             console.log("请求成功！")
             return response;
         }
-
-        const data = await response.json();
     } catch (error) {
         console.error('Error fetching sound library:', error);
     }

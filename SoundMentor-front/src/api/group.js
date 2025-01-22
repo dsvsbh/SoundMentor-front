@@ -161,3 +161,20 @@ export const deleteOrganizationService = async (organizationId) => {
         throw error;
     }
 }
+
+// 查询组织文件列表（分页，动态条件）
+export const getGroupFiles = async (formData) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await request.post('/organization/fileList', formData, {
+            headers: { Authorization: token },
+        });
+        if (response.code != "0") {
+            console.log("获取失败：", response.message);
+        }
+        return response;
+    } catch (error) {
+        console.error("获取失败：", error.message);
+        throw error;
+    }
+}

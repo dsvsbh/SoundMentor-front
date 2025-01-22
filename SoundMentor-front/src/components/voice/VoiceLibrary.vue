@@ -122,7 +122,7 @@ const getAllSoundLib = async (type) => {
   };
   try {
     const response = await getSoundLib(form);
-    if (response.code === "0") {
+    if (response.code == 0) {
       const records = response.data.records;
       totalAudioCount.value = response.data.total;
       records.forEach((audio) => {
@@ -136,7 +136,7 @@ const getAllSoundLib = async (type) => {
 
       return records;
     } else {
-      ElMessage.error(response.message);
+      //ElMessage.error(response.message);
       return [];
     }
   } catch (error) {
