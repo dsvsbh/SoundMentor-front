@@ -178,3 +178,20 @@ export const getGroupFiles = async (formData) => {
         throw error;
     }
 }
+
+// 分享用户文件到组织
+export const uploadFileToGroup = async (form) => {
+    try {
+        const token = localStorage.getItem('token');
+        const res = await request.post('/organization/shareFile', form, {
+            headers: { Authorization: token },
+        });
+        if (res.code === "0") {
+            console.log("上传成功");
+        }
+        return res;
+
+    } catch (err) {
+        console.error("上传出错:", err.message);
+    }
+}

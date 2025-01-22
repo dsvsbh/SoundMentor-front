@@ -60,9 +60,13 @@
             v-model="searchQuery"
             ><template #prepend> <el-button :icon="Search" /> </template
           ></el-input>
-          <el-button type="primary" :icon="UploadFilled" @click="upload"
+          <el-button
+            type="primary"
+            :icon="UploadFilled"
+            @click="isUploadVisible = !isUploadVisible"
             >上传文件</el-button
           >
+          <UploadFiles v-model="isUploadVisible" />
         </div>
       </div>
       <div class="file-list">
@@ -134,8 +138,6 @@
     </div>
   </div>
 
-  <div v-if="isUploadVisible">11111111111111111111</div>
-
   <Footer />
 </template>
 
@@ -147,6 +149,7 @@ import {
 } from "../../api/group";
 import { ElMessage } from "element-plus";
 import Footer from "@/components/headFoot/Footer.vue";
+import UploadFiles from "@/components/group/UploadFiles.vue";
 import {
   User,
   Files,
@@ -203,7 +206,7 @@ const getTagType = (role) => {
 let isUploadVisible = ref(false);
 // 上传用户文件至组织
 const upload = (file) => {
-  isUploadVisible = true;
+  isUploadVisible = !isUploadVisible;
   console.log(11111);
 };
 
@@ -258,7 +261,7 @@ const getSelectedFileTypes = () => {
   const typeMap = {
     // 文件类型映射
     全部: ["MP3", "DOC", "DOCX", "PDF", "PPTX", "PNG", "JPG"],
-    PPT: ["PPT", "PPTX"],
+    PPT: ["PPTX"],
     音频: ["MP3"],
     图片: ["PNG", "JPG"],
     文档: ["DOC", "DOCX", "PDF"],
@@ -435,5 +438,14 @@ const filterFiles = (button) => {
   justify-content: center;
   align-items: center;
   margin-top: 20px;
+}
+
+.user-file-list {
+  gap: 10px;
+}
+.file-item {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 }
 </style>

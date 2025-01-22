@@ -44,9 +44,11 @@
               background-color: #1890ff;
               color: white;
             "
+            :loading="isLoadingLogin"
             @click="handleLogin"
-            >登录</el-button
           >
+            登录
+          </el-button>
           <div class="under-login">
             <div class="left">
               <a href="" style="color: #9a9a9a">帮助</a>
@@ -155,9 +157,14 @@
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleRegister" style="width: 155px"
-            >注册</el-button
+          <el-button
+            type="primary"
+            :loading="isLoadingRegister"
+            @click="handleRegister"
+            style="width: 155px"
           >
+            注册
+          </el-button>
           <a
             href="javascript:void(0)"
             @click="toggleForm"
@@ -206,6 +213,8 @@ export default {
         rePassword: "",
       },
       rememberMe: false,
+      isLoadingRegister: false,
+      isLoadingLogin: false,
     };
   },
   watch: {
@@ -223,7 +232,38 @@ export default {
     toggleForm() {
       this.isLogin = !this.isLogin;
     },
+    async handleRegister() {
+      this.isLoadingRegister = true; // Set loading state to true
+      this.$refs.registerFormRef.validate(async (valid) => {
+        if (valid) {
+          try {
+            await userRegisterService({
+              name: this.registerForm.name,
+              username: this.registerForm.username,
+              email: this.registerForm.email,
+              verifyCode: this.registerForm.verifyCode,
+              phone: this.registerForm.phone,
+              password: this.registerForm.password,
+            });
+            ElMessage.success("注册成功");
+
+            // Switch to login form
+            this.isLogin = true;
+            this.$refs.registerFormRef.resetFields();
+          } catch (error) {
+            console.error("注册失败:", error);
+            ElMessage.error(error.message || "注册失败");
+          } finally {
+            this.isLoadingRegister = false; // Reset loading state
+          }
+        } else {
+          this.isLoadingRegister = false; // Reset loading state if validation fails
+        }
+      });
+    },
+
     async handleLogin() {
+      this.isLoadingLogin = true; // Set loading state to true
       this.$refs.loginFormRef.validate(async (valid) => {
         if (valid) {
           try {
@@ -246,32 +286,11 @@ export default {
           } catch (error) {
             console.error("登录失败:", error);
             ElMessage.error(error.message || "登录失败，请稍后重试");
+          } finally {
+            this.isLoadingLogin = false; // Reset loading state
           }
-        }
-      });
-    },
-    async handleRegister() {
-      this.$refs.registerFormRef.validate(async (valid) => {
-        if (valid) {
-          try {
-            // 调用注册接口
-            await userRegisterService({
-              name: this.registerForm.name,
-              username: this.registerForm.username,
-              email: this.registerForm.email,
-              verifyCode: this.registerForm.verifyCode,
-              phone: this.registerForm.phone,
-              password: this.registerForm.password,
-            });
-            ElMessage.success("注册成功");
-
-            // 切换到登录表单
-            this.isLogin = true;
-            this.$refs.registerFormRef.resetFields();
-          } catch (error) {
-            console.error("注册失败:", error);
-            ElMessage.error(error.message || "注册失败");
-          }
+        } else {
+          this.isLoadingLogin = false; // Reset loading state if validation fails
         }
       });
     },

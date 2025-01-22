@@ -123,11 +123,14 @@ export const getUserFiles = (pageDTO) => {
         })
         if (res.code == "0") {
             console.log("获取文件成功");
+
             return res;
         } else {
             console.log("获取失败！");
+            console.log(pageDTO)
             return res;
         }
+
     } catch (err) {
         ElMessage.error(err.message);
     }
