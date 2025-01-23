@@ -27,7 +27,7 @@
       </el-table-column>
       <el-table-column prop="organizationRole" label="角色">
         <template #default="scope">
-          <el-tag type="primary" size="default">
+          <el-tag :type="getTagType(scope.row.organizationRole)" size="default">
             {{ roleLabels[scope.row.organizationRole] }}
           </el-tag>
         </template>
@@ -103,7 +103,17 @@ const roleLabels = {
   1: "组织管理员",
   2: "组织创建者",
 };
-
+// 获取标签类型
+const getTagType = (role) => {
+  switch (role) {
+    case 0:
+      return "info"; //普通成员
+    case 1:
+      return "warning"; // 组织管理员
+    case 2:
+      return "danger"; //组织创建者
+  }
+};
 const router = useRouter();
 const organizationId = Number(router.currentRoute.value.params.id);
 

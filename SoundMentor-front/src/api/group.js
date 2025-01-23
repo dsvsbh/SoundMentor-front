@@ -195,3 +195,19 @@ export const uploadFileToGroup = async (form) => {
         console.error("上传出错:", err.message);
     }
 }
+
+// 用户下载文件时增加下载次数接口
+export const getDownloadCounts = async (body) => {
+    try {
+        const token = localStorage.getItem('token');
+        const res = await request.put('/organization/download', body, {
+            headers: { Authorization: token },
+        });
+        if (res.code === "0") {
+            console.log("更新下载次数成功！")
+        }
+        return res;
+    } catch (err) {
+        console.error("更新出错！", err.message);
+    }
+}

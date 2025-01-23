@@ -5,17 +5,10 @@ const voiceApi = "/soundlib";
 // 获取用户和预设声音样本库声音  
 export const getSoundLib = async (data) => {
     const url = '/getSoundLib';
-    const requestData = {
-        type: data.type,
-        current: data.current,
-        size: data.size,
-        userId: data.userId,
-        status: data.status,
-        soundName: data.soundName
-    };
+
     try {
         const token = localStorage.getItem("token");
-        const response = await request.post(voiceApi + url, requestData, {
+        const response = await request.post(voiceApi + url, data, {
             headers: {
                 Authorization: token
             }
@@ -94,7 +87,7 @@ export const deleteSoundLib = async (idList) => {
     try {
 
         const token = localStorage.getItem("token");
-        const res = request.post(voiceApi + "/deleteSound", {
+        const res = await request.post(voiceApi + "/deleteSound", {
             headers: {
                 Authorization: token
             },
@@ -106,6 +99,76 @@ export const deleteSoundLib = async (idList) => {
         return res;
     } catch (error) {
         console.log("请求失败", error);
+        return error.code;
+    }
+}
+
+// 分页查询收藏列表
+export const getFavorite = async (form) => {
+    try {
+
+        const token = localStorage.getItem("token");
+        const res = await request.post(voiceApi + "/pageFavorite", form, {
+            headers: {
+                Authorization: token
+            }
+        });
+        console.log("请求成功", res);
+        return res;
+    } catch (error) {
+        console.log("请求失败", error);
+        return error.code;
+    }
+}
+
+// 添加收藏
+export const addFavorite = async (voiceId) => {
+    const body = {
+        id: voiceId
+    }
+    try {
+
+        const token = localStorage.getItem("token");
+        const res = await request.post(voiceApi + "/addFavorite", body, {
+            headers: {
+                Authorization: token
+            },
+        });
+        if (res.data == true) {
+            console.log("添加成功");
+            return res;
+        } else {
+            console.error("添加失败", res.message);
+            return res;
+        }
+    } catch (error) {
+        console.log("出错：", error);
+        return error.code;
+    }
+}
+
+// 取消收藏
+export const deleteFavorite = async (voiceId) => {
+    const body = {
+        id: voiceId
+    }
+    try {
+
+        const token = localStorage.getItem("token");
+        const res = await request.post(voiceApi + "/delFavorite", body, {
+            headers: {
+                Authorization: token
+            },
+        });
+        if (res.data == true) {
+            console.log("取消成功", res);
+            return res;
+        } else {
+            console.error("取消失败", res.message);
+            return res;
+        }
+    } catch (error) {
+        console.log("出错：", error);
         return error.code;
     }
 }

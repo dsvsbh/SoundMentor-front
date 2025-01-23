@@ -88,7 +88,10 @@ const userActiveStyle = {
   backgroundColor: "#409EFF",
   color: "#fff",
 };
-
+const props = defineProps({
+  isUploadVisible: Boolean,
+  organizationId: String,
+});
 const getSelectedFileTypes = () => {
   const typeMap = {
     // 文件类型映射
@@ -179,7 +182,7 @@ const formatFileName = (fileName) => {
 // 选择文件的逻辑
 const loading = ref(false);
 const selectUserFile = async (file) => {
-  const orgId = parseInt(organizationId.value, 10); //组织ID  //TODO
+  const orgId = parseInt(props.organizationId, 10); //组织ID
   const form = {
     fileId: file.fileId,
     organizationId: orgId,

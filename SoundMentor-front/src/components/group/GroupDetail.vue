@@ -12,7 +12,43 @@
           </el-tag>
         </div>
         <template v-if="currentRole === 2">
-          <el-button type="primary" :icon="Setting">组织管理</el-button>
+          <el-button
+            type="primary"
+            :icon="Setting"
+            @click="isControlVisible = !isControlVisible"
+            >组织管理</el-button
+          >
+          <el-dialog v-model="isControlVisible" title="组织管理" width="30%">
+            <div class="list-box">
+              <div
+                v-for="item in funcList"
+                :key="item.title"
+                style="
+                  display: flex;
+                  margin: 10px 0;
+                  border-top: 1px solid #e9e9e9;
+                  padding-top: 10px;
+                "
+              >
+                <el-icon style="flex: 0.5; color: #58aaff" size="30">
+                  <component :is="item.icon" />
+                </el-icon>
+                <div
+                  @click="item.handleClick"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    flex: 3;
+                    gap: 6px;
+                    margin-left: 10px;
+                  "
+                >
+                  <text style="font-weight: bold">{{ item.title }}</text>
+                  <text style="font-size: 12px">{{ item.info }}</text>
+                </div>
+              </div>
+            </div>
+          </el-dialog>
         </template>
         <template v-else>
           <el-button type="primary" :icon="Setting" disabled
@@ -66,7 +102,10 @@
             @click="isUploadVisible = !isUploadVisible"
             >上传文件</el-button
           >
-          <UploadFiles v-model="isUploadVisible" />
+          <UploadFiles
+            v-model="isUploadVisible"
+            :organizationId="organizationId"
+          />
         </div>
       </div>
       <div class="file-list">
@@ -86,22 +125,23 @@
           <div class="info">
             <div class="under-img">
               <text style="font-size: 16px; font-weight: 600">{{
-                file.name
+                file.fileName
               }}</text>
               <el-icon><InfoFilled /></el-icon>
             </div>
             <!-- 文件信息 -->
             <div class="file-info">
               <el-icon><Document /></el-icon>
-              <text>{{ file.size }}页</text>
+              <text>{{ file.fileSize }}MB</text>
               <el-icon><Download /></el-icon>
-              <text>{{ file.downloadCount }}次</text>
+              <text>{{ file.downloadCount }}次下载</text>
+              <text>上传于{{ file.createTime }}</text>
             </div>
             <!-- 成员信息 -->
             <div class="member-info">
               <div class="left-info">
-                <img :src="file.memberImage" alt="" class="member-img" />
-                <text>{{ file.memberName }}</text>
+                <img :src="file.sharerHeaderImg" alt="" class="member-img" />
+                <text>{{ file.sharerName }}</text>
               </div>
               <div class="right-info">
                 <el-tag :type="getTagType(file.memberRole)">{{
@@ -112,7 +152,7 @@
             <!-- 操作 -->
             <div class="card-foot">
               <text>点击修改/查看对文件</text>
-              <el-icon><Download /></el-icon>
+              <el-icon @click="downloadFile(file)"><Download /></el-icon>
               <el-icon><Delete /></el-icon>
             </div>
           </div>
@@ -137,7 +177,17 @@
       </div>
     </div>
   </div>
-
+  <el-dialog
+    title="确定要解散组织吗？"
+    v-model="isDelete"
+    width="30%"
+    style="margin-top: 200px"
+  >
+    <span class="dialog-footer">
+      <el-button @click="isDelete = false">取消</el-button>
+      <el-button type="primary" @click="confirmDelete">确认</el-button>
+    </span>
+  </el-dialog>
   <Footer />
 </template>
 
@@ -146,6 +196,9 @@ import { ref, onMounted, computed, watch } from "vue";
 import {
   getOrganizationMemberListService,
   getGroupFiles,
+  getOrganizationShareCodeService,
+  deleteOrganizationService,
+  getDownloadCounts,
 } from "../../api/group";
 import { ElMessage } from "element-plus";
 import Footer from "@/components/headFoot/Footer.vue";
@@ -161,8 +214,10 @@ import {
   Setting,
   Search,
   InfoFilled,
+  Share,
 } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
+import { formatDate } from "@/utils/TimeFromUtil";
 
 const router = useRouter();
 const organizationId = ref(router.currentRoute.value.params.id); //组织id
@@ -204,11 +259,6 @@ const getTagType = (role) => {
 };
 
 let isUploadVisible = ref(false);
-// 上传用户文件至组织
-const upload = (file) => {
-  isUploadVisible = !isUploadVisible;
-  console.log(11111);
-};
 
 // 文件过滤
 const buttonList = ["全部", "PPT", "音频", "图片", "文档"]; // 筛选按钮列表
@@ -229,6 +279,13 @@ onMounted(async () => {
   getCurrentRole(); // 获取当前用户角色
   fetchFiles(); // 初始获取文件
 });
+// 文件名格式化函数
+const formatFileName = (fileName) => {
+  const maxLength = 10; // 最大长度
+  return fileName && fileName.length > maxLength
+    ? `${fileName.slice(0, maxLength)}...`
+    : fileName || "未知文件"; // 处理undefined
+};
 
 // 根据当前筛选条件和分页请求文件
 const fetchFiles = async () => {
@@ -246,7 +303,33 @@ const fetchFiles = async () => {
   try {
     const response = await getGroupFiles(formData);
     if (response.code == "0") {
-      files.value = response.data.records;
+      files.value = response.data.records.map((file) => ({
+        ...file,
+        fileName: formatFileName(file.fileName),
+        fileSize: (file.fileSize / 1024 / 1024).toFixed(2),
+        createTime: formatDate(file.createTime),
+        memberRole: getUploadUserRole(file),
+      }));
+      const isEqual = (arr1, arr2) => {
+        return (
+          arr1.length === arr2.length &&
+          arr1.every((value, index) => value === arr2[index])
+        );
+      };
+
+      if (
+        isEqual(formData.fileTypes, [
+          "MP3",
+          "DOC",
+          "DOCX",
+          "PDF",
+          "PPTX",
+          "PNG",
+          "JPG",
+        ])
+      ) {
+        group.value.fileCount = response.data.total;
+      }
       totalPages.value = response.data.pages; // 更新总页数
     } else {
       ElMessage.error(response.message);
@@ -254,6 +337,14 @@ const fetchFiles = async () => {
   } catch (error) {
     ElMessage.error("获取文件时出错");
   }
+};
+
+// 获取上传用户的角色
+const getUploadUserRole = (file) => {
+  const member = members.value.find(
+    (member) => member.name === file.sharerName
+  );
+  return member ? member.organizationRole : null;
 };
 
 // 根据当前激活的按钮获取选中的文件类型
@@ -326,6 +417,97 @@ watch(activeButton, () => {
 const filterFiles = (button) => {
   activeButton.value = button;
 };
+
+// 下载文件
+const downloadFile = (file) => {
+  const link = document.createElement("a");
+  link.href = file.filePath;
+  link.download = "";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  const form = {
+    organizationId: organizationId.value,
+    fileId: file.fileId,
+  };
+  getDownloadCounts(form);
+};
+
+// ==========组织管理==========
+const isDelete = ref(false);
+
+// 获取邀请码
+const getShareCode = async (id) => {
+  try {
+    const res = await getOrganizationShareCodeService(id);
+    if (res) {
+      ElMessage.success(`已获取组织邀请码：${id}-${res}`);
+    } else {
+      ElMessage.error(res.message || "获取邀请码失败");
+    }
+  } catch (error) {
+    console.error("获取组织邀请码时出错：", error);
+    ElMessage.error("获取组织邀请码失败，请稍后再试。");
+  }
+};
+
+// 解散组织
+const handleDeleteGroup = async () => {
+  const name = JSON.parse(localStorage.getItem("userInfo") || "{}").name;
+  if (members.value[0]?.name !== name) {
+    ElMessage.error("没有权限操作！");
+    return;
+  } else {
+    isDelete.value = true; // 可能触发确认对话框
+  }
+};
+
+// 确认删除
+const confirmDelete = async () => {
+  try {
+    const res = await deleteOrganizationService(organizationId.value);
+    if (res.code == 0) {
+      ElMessage.success("解散成功！");
+      isDelete.value = false;
+      window.location.reload();
+    }
+  } catch (error) {
+    ElMessage.error("解散失败！");
+    window.location.reload();
+  }
+};
+
+// 功能列表
+const funcList = [
+  {
+    title: "成员管理",
+    info: "管理组织成员和权限",
+    icon: User,
+    handleClick: () => {
+      const id = organizationId.value;
+      router.push({
+        path: `/groupMembers/${id}`,
+      });
+    },
+  },
+  {
+    title: "邀请码",
+    info: "获取组织邀请码",
+    icon: Share,
+    handleClick: () => {
+      getShareCode(organizationId.value);
+    },
+  },
+  {
+    title: "解散组织",
+    info: "永久删除该组织及其所有数据",
+    icon: Delete,
+    handleClick: handleDeleteGroup,
+  },
+];
+const isControlVisible = ref(false);
 </script>
 <style scoped>
 .container {
@@ -386,6 +568,8 @@ const filterFiles = (button) => {
 .file-item {
   border: 1px solid #e6e6e6;
   border-radius: 10px;
+  flex-direction: column;
+  width: 100%;
 }
 .file-item .ppt-first-page {
   width: 100%;
@@ -395,7 +579,8 @@ const filterFiles = (button) => {
   border-top-right-radius: 10px;
 }
 .file-item .info {
-  padding: 10px;
+  width: 260px;
+  padding: 10px 0;
 }
 .under-img {
   display: flex;
@@ -405,9 +590,9 @@ const filterFiles = (button) => {
 }
 .file-item .info .file-info {
   display: flex;
-  align-items: center;
   gap: 5px;
   color: #9a9ca2;
+  font-size: 12px;
 }
 .file-item .info .member-info {
   display: flex;
@@ -417,8 +602,8 @@ const filterFiles = (button) => {
   height: 50px;
 }
 .file-item .info .member-info .member-img {
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background-color: #f2f2f2;
   margin-right: 10px;
@@ -428,9 +613,11 @@ const filterFiles = (button) => {
   justify-content: space-between;
   align-items: center;
   margin-top: 10px;
-  font-size: 16px;
+  font-size: 13px;
   color: #31a8ff;
   height: 30px;
+  border-top: 1px solid #e9e9e9;
+  padding-top: 10px;
 }
 .page-btns {
   width: 100%;

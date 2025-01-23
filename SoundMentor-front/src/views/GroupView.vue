@@ -54,7 +54,7 @@
           }}</span>
           <div>成员</div>
         </div>
-        <div class="right-box" @click="handleGroupClick(group.id)">
+        <div class="right-box" @click="handleGroupClick(group.id, group)">
           <span style="font-size: 30px; font-weight: bold">{{
             group.fileCount
           }}</span>

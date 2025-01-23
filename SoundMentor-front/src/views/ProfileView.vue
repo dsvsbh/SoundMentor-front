@@ -68,8 +68,8 @@
             <el-form :model="userForm" :rules="rules" ref="userFormRef">
               <div class="center">
                 <div class="left">
-                  <el-form-item label="用户名" prop="username">
-                    <el-input v-model="userForm.username" />
+                  <el-form-item label="用户名" prop="name">
+                    <el-input v-model="userForm.name" />
                   </el-form-item>
                   <el-form-item label="手机号" prop="phone">
                     <el-input v-model="userForm.phone" />
@@ -79,8 +79,8 @@
                   <el-form-item label="邮箱" prop="email">
                     <el-input v-model="userForm.email" disabled="true" />
                   </el-form-item>
-                  <el-form-item label="账号" prop="name">
-                    <el-input v-model="userForm.name" disabled="true" />
+                  <el-form-item label="账号" prop="username">
+                    <el-input v-model="userForm.username" disabled="true" />
                   </el-form-item>
                 </div>
               </div>
@@ -142,21 +142,14 @@
             >
             <div class="btn-group">
               <el-button
-                v-for="type in ['PPTX', 'MP3', 'PNG', 'DOC']"
-                :key="type"
-                @click="setFileType(type)"
-                type="default"
-                :style="isActive(type) ? activeStyle : {}"
+                v-for="(userButton, index) in userButtonList"
+                :key="index"
+                :style="userActiveButton === userButton ? userActiveStyle : {}"
+                style="margin-bottom: 10px"
+                @click="setUserActiveButton(userButton)"
+                :disabled="loading"
               >
-                {{
-                  type === "PPTX"
-                    ? "PPT"
-                    : type === "MP3"
-                    ? "音频"
-                    : type === "PNG"
-                    ? "图片"
-                    : "文档"
-                }}
+                {{ userButton }}
               </el-button>
             </div>
             <el-upload
@@ -172,29 +165,33 @@
             </el-upload>
             <el-input
               class="search-bar"
-              placeholder="搜索..."
-              v-model="searchTerm"
-              @input="fetchFiles"
-              style="margin-bottom: 20px"
-              ><template #prepend> <el-button :icon="Search" /> </template
-            ></el-input>
+              placeholder="搜索文件"
+              v-model="userSearchTerm"
+              :disabled="loading"
+            >
+              <template #append>
+                <el-button :icon="Search" @click="searchItem" />
+              </template>
+            </el-input>
           </div>
-          <el-table :data="formattedFiles" style="padding: 0 40px">
+          <el-table :data="userFiles" style="width: 100%; margin-top: 20px">
             <el-table-column prop="fileName" label="文件名" />
-            <el-table-column prop="fileType" label="文件类型" />
             <el-table-column prop="fileSize" label="文件大小" />
             <el-table-column prop="createTime" label="创建时间" />
           </el-table>
-          <el-pagination
-            @current-change="fetchFiles"
-            :current-page="currentPage"
-            :page-size="pageSize"
-            :page-sizes="[5, 10, 20]"
-            :total="totalFiles"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handlePageSizeChange"
-            style="padding: 0 120px; padding-top: 20px"
-          />
+          <div class="page-btns">
+            <el-button
+              @click="changeUserPage(userCurrentPage - 1)"
+              :disabled="userCurrentPage === 1 || loading"
+              >上一页</el-button
+            >
+            <el-button>{{ userCurrentPage }}</el-button>
+            <el-button
+              @click="changeUserPage(userCurrentPage + 1)"
+              :disabled="userCurrentPage === userTotalPages || loading"
+              >下一页</el-button
+            >
+          </div>
         </template>
       </el-main>
     </el-container>
@@ -218,7 +215,7 @@ import { uploadFileService } from "@/api/file";
 
 const userForm = ref({
   headImg: "",
-  username: "",
+  name: "",
   phone: "",
 });
 
@@ -278,7 +275,7 @@ onMounted(async () => {
 
 const isFormModified = computed(() => {
   return (
-    userForm.value.username !== initialUserInfo.value.username ||
+    userForm.value.name !== initialUserInfo.value.name ||
     userForm.value.phone !== initialUserInfo.value.phone ||
     userForm.value.headImg !== initialUserInfo.value.headImg
   );
@@ -307,7 +304,7 @@ const handleAvatarError = (err, file) => {
 
 const saveUserInfo = async () => {
   const userInfo = {
-    name: userForm.value.username || "",
+    name: userForm.value.name || "",
     phone: userForm.value.phone || "",
     headImg: userForm.value.headImg || "",
   };
@@ -363,42 +360,119 @@ const totalFiles = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const selectedFileType = ref("PPTX");
-const searchTerm = ref("");
 // 文件类型映射
-const fileTypeMap = {
-  0: "MP3",
-  1: "DOC",
-  2: "DOCX",
-  3: "PDF",
-  4: "JPG",
-  5: "PPTX",
-  6: "PNG",
+const getSelectedFileTypes = () => {
+  const typeMap = {
+    // 文件类型映射
+    全部: ["MP3", "DOC", "DOCX", "PDF", "PPTX", "PNG", "JPG"],
+    PPT: ["PPTX"],
+    音频: ["MP3"],
+    图片: ["PNG", "JPG"],
+    文档: ["DOC", "DOCX", "PDF"],
+  };
+  return typeMap[userActiveButton.value] || []; // 返回对应文件类型
 };
-const activeStyle = {
+const userFiles = ref([]);
+const userButtonList = ref(["音频", "文档", "图片", "PPT"]);
+const userActiveButton = ref("音频");
+const userActiveStyle = {
   backgroundColor: "#409EFF", // 活动状态的背景色
   color: "#fff", // 活动状态的字体颜色
 };
+// 设置活动按钮并重新获取文件
+const setUserActiveButton = (button) => {
+  userActiveButton.value = button;
 
-// 检查按钮是否被选中
-const isActive = (fileType) => {
-  return selectedFileType.value === fileType; // 判断当前文件类型是否是选中状态
+  const selectedTypes = getSelectedFileTypes(); // 获取当前按钮对应的文件类型
+  const existingTypes = userSelectedFileTypes.value;
+
+  selectedTypes.forEach((type) => {
+    const typeIndex = existingTypes.indexOf(type);
+    if (typeIndex > -1) {
+      existingTypes.splice(typeIndex, 1); // 取消选择
+    } else {
+      existingTypes.push(type); // 选择文件类型
+    }
+  });
+
+  fetchUserFiles(); // 重新获取文件列表
 };
-const setFileType = (fileType) => {
-  selectedFileType.value = fileType;
-  fetchFiles();
+const userCurrentPage = ref(1);
+const userPageSize = ref(5);
+const userTotalFiles = ref(0);
+const userTotalPages = ref(0);
+const userSelectedFileTypes = ref([]); // 存储选中的文件类型
+
+const userSearchTerm = ref("");
+// 获取文件列表的函数
+const fetchUserFiles = async () => {
+  const userPageDTO = {
+    fileTypes: getSelectedFileTypes(),
+    fileName: userSearchTerm.value,
+    pageNum: userCurrentPage.value,
+    pageSize: userPageSize.value,
+  };
+
+  try {
+    loading.value = true; // 开始加载
+    const response = await getUserFiles(userPageDTO);
+    if (response.code === "0") {
+      userFiles.value = response.data.records.map((file) => ({
+        ...file,
+        fileName: formatFileName(file.fileName), // 格式化文件名
+        fileSize: (file.fileSize / 1024).toFixed(2) + "B",
+        createTime: formatDate(file.createTime), // 格式化创建时间
+      }));
+
+      userTotalFiles.value = response.data.total; // 更新总文件数
+      userTotalPages.value = Math.ceil(
+        userTotalFiles.value / userPageSize.value
+      ); // 计算总页数
+    } else {
+      console.error(response.message);
+    }
+  } catch (error) {
+    console.error("请求失败:", error);
+  } finally {
+    loading.value = false; // 结束加载
+  }
 };
-const formattedFiles = computed(() => {
-  return files.value.map((file) => ({
-    ...file,
-    fileType: fileTypeMap[file.fileType] || "未知",
-    createTime: file.createTime.split("T")[0],
-    fileSize: (file.fileSize / 1024).toFixed(1) + "B",
-  }));
+
+// 点击搜索图标时调用搜索函数
+const searchItem = () => {
+  userCurrentPage.value = 1; // 重置为第一页
+  fetchUserFiles(); // 调用获取文件的函数
+};
+const loading = ref(false);
+
+// 改变页面
+const changeUserPage = (newPage) => {
+  if (newPage > 0 && newPage <= userTotalPages.value) {
+    userCurrentPage.value = newPage;
+    fetchUserFiles(); // 重新获取文件
+  }
+};
+
+// 监听文件类型和搜索条件的变化
+watch([userSelectedFileTypes, userSearchTerm], () => {
+  userCurrentPage.value = 1; // 重置为第一页
+  fetchUserFiles(); // 重新获取文件
 });
+
+// 初始加载
+fetchUserFiles();
+
+// 文件名格式化函数
+const formatFileName = (fileName) => {
+  const maxLength = 10; // 最大长度
+  return fileName && fileName.length > maxLength
+    ? `${fileName.slice(0, maxLength)}...`
+    : fileName || "未知文件"; // 处理undefined
+};
 const fetchFiles = async () => {
   const form = {
     fileTypes: selectedFileType.value ? [selectedFileType.value] : [],
-    fileName: searchTerm.value,
+    fileName: userSearchTerm.value,
     pageNum: currentPage.value,
     pageSize: pageSize.value,
   };
@@ -415,15 +489,10 @@ const fetchFiles = async () => {
     ElMessage.error("请求失败，请稍后重试。");
   }
 };
-
-const handlePageSizeChange = (size) => {
-  pageSize.value = size;
-  currentPage.value = 1;
-  fetchFiles();
-};
-
-watch(currentPage, () => {
-  fetchFiles();
+// 监听文件类型和搜索条件的变化
+watch([userSelectedFileTypes, userSearchTerm], () => {
+  userCurrentPage.value = 1; // 重置为第一页
+  fetchUserFiles(); // 重新获取文件
 });
 </script> 
 
@@ -534,14 +603,23 @@ watch(currentPage, () => {
 }
 .btn-group {
   margin-left: 10px;
+  display: flex;
 }
 .file-head .search-bar {
+  height: 34px;
   width: 150px;
-  height: 30px;
   margin-left: 20px;
 }
 .file-head .upload-file {
   margin-left: 20px;
+}
+
+.page-btns {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
 }
 </style>
 
