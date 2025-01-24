@@ -17,7 +17,11 @@
             :before-upload="handleUpload"
             class="upload-btn"
           >
-            上传头像
+            <template #trigger>
+              <el-button type="default"
+                ><el-icon><Upload /></el-icon>上传头像</el-button
+              >
+            </template>
           </el-upload>
         </div>
       </div>
@@ -512,15 +516,31 @@ watch([userSelectedFileTypes, userSearchTerm], () => {
   margin: 30px auto;
   border-radius: 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  background-color: white;
+  overflow: hidden; /* 确保内容不超出边界 */
+  position: relative;
+}
+.header::before {
+  content: "";
+  top: 40%;
+  left: 50%;
+  width: 1000px;
+  height: 120px;
   background: linear-gradient(135deg, #3fa4fa, #36cfdd);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  position: absolute;
+  z-index: 0;
 }
 .header .avatar {
   width: 150px;
   height: 150px;
   border-radius: 50%;
-  margin: 20px 20px;
+  margin: 20px 60px;
   background-color: #fff;
   border: 1px solid #fff;
+  position: relative;
+  z-index: 1;
 }
 .header .under-avatar {
   width: 100%;
@@ -534,21 +554,21 @@ watch([userSelectedFileTypes, userSearchTerm], () => {
   padding-left: 50px;
 }
 .header .upload-btn {
-  flex: 1;
+  flex: 0.6;
 }
 .header .username {
-  color: white;
+  color: black;
   font-size: 30px;
 }
 .header .id {
   margin-left: 20px;
   margin-top: 10px;
-  color: rgb(58, 58, 58);
+  color: #909399;
 }
 .header .registration-date {
   margin-left: 20px;
   margin-top: 10px;
-  color: rgb(58, 58, 58);
+  color: #909399;
 }
 .aside {
   width: 250px;

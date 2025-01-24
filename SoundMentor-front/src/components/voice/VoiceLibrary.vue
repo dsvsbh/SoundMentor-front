@@ -35,7 +35,26 @@
             {{ audio.type === 1 ? "预设" : audio.type === 0 ? "自定义" : "" }}
           </el-tag>
         </div>
-        <p>{{ audio.description }}</p>
+        <p v-if="audio.description !== '内容为空'">
+          {{ audio.description }}
+        </p>
+        <el-skeleton style="width: 240px" v-else>
+          <template #template>
+            <el-skeleton-item
+              variant="text"
+              style="
+                margin-right: 16px;
+                width: 300px;
+                height: 18px;
+                margin-top: 20px;
+              "
+            />
+            <el-skeleton-item
+              variant="text"
+              style="width: 30%; height: 18px; margin-bottom: 10px"
+            />
+          </template>
+        </el-skeleton>
         <!-- TODO调整速度 -->
         <el-slider
           v-model="audio.speed"
@@ -122,7 +141,18 @@ const tabs = ref([
   { label: "自定义", name: "custom", type: 0 },
   { label: "收藏", name: "favorites", type: 3 },
 ]);
+// 文件名格式化函数
+const formatFileName = (fileName, maxLength) => {
+  if (!fileName) return "内容为空";
 
+  // 如果文件名大于 maxLength，则截断并添加 '...'
+  if (fileName.length > maxLength) {
+    return `${fileName.slice(0, maxLength)}...`;
+  }
+
+  // 如果文件名不足 maxLength，则填充到 maxLength 的占位符（用空格填充）
+  return fileName.padEnd(maxLength, " ");
+};
 const fetchAudioLibrary = async () => {
   const type = tabs.value.find((tab) => tab.name === activeSubTab.value).type;
   const data = {
@@ -138,6 +168,8 @@ const fetchAudioLibrary = async () => {
       type === 3 ? await getFavorite(data) : await getSoundLib(data);
     audioList.value = response.data.records.map((audio) => ({
       ...audio,
+      soundName: formatFileName(audio.soundName, 10),
+      description: formatFileName(audio.description, 30),
       isPlaying: false,
     }));
     totalAudioCount.value = response.data.total;

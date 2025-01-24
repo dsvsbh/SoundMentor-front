@@ -43,7 +43,15 @@
               <el-tag type="primary" size="small">{{
                 roleLabels[group.organizationRole]
               }}</el-tag>
-              <el-icon class="info-icon" id="info-icon"><InfoFilled /></el-icon>
+              <el-tooltip
+                :content="group.description"
+                placement="bottom"
+                effect="dark"
+              >
+                <el-icon class="info-icon">
+                  <InfoFilled />
+                </el-icon>
+              </el-tooltip>
             </div>
           </div>
         </template>
@@ -157,7 +165,18 @@ const roleLabels = {
   1: "组织管理员",
   2: "组织创建者",
 };
+// 文件名格式化函数
+const formatName = (fileName, maxLength) => {
+  if (!fileName) return "内容为空";
 
+  // 如果文件名大于 maxLength，则截断并添加 '...'
+  if (fileName.length > maxLength) {
+    return `${fileName.slice(0, maxLength)}...`;
+  }
+
+  // 如果文件名不足 maxLength，则填充到 maxLength 的占位符（用空格填充）
+  return fileName.padEnd(maxLength, " ");
+};
 const getGroupList = async () => {
   for (const type of typeList) {
     try {
@@ -165,6 +184,7 @@ const getGroupList = async () => {
       if (result) {
         result.forEach((item) => {
           item.createdTime = formatDate(item.createdTime);
+          item.name = formatName(item.name, 10);
         });
         groupList.value.push(...result);
       } else {
@@ -209,9 +229,10 @@ const createGroup = async () => {
   };
   try {
     const res = await createOrganizationService(data);
-    if (res.code === 0) {
+    if (res.code === "0") {
       ElMessage.success("创建成功");
       dialogVisible.value = false;
+      groupList.value = [];
       await getGroupList();
     } else {
       ElMessage.error(res.message);
@@ -302,22 +323,6 @@ onMounted(() => {
   position: relative;
 }
 
-.info-icon:hover::after {
-  content: attr(data-info);
-  font-size: 12px;
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 20px;
-  color: #ffffff;
-  background-color: #46474b;
-  padding: 5px 10px;
-  border-radius: 5px;
-}
-/* .card-header {
-  color: #ffffff;
-  background: linear-gradient(to right, #40a0fe, #36cfdd);
-} */
 .under-title {
   display: flex;
   justify-content: space-between;

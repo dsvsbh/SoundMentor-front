@@ -100,6 +100,7 @@
             type="primary"
             :icon="UploadFilled"
             @click="isUploadVisible = !isUploadVisible"
+            :disabled="currentRole === 0"
             >上传文件</el-button
           >
           <UploadFiles
@@ -111,10 +112,7 @@
       <div class="file-list">
         <template v-if="paginatedFiles.length == 0">
           <div style="padding: 0 355px">
-            <el-empty
-              description="组织文件为空，快去上传吧"
-              style="width: 200px"
-            >
+            <el-empty description="文件为空，快去上传吧" style="width: 200px">
             </el-empty>
           </div>
         </template>
@@ -127,7 +125,10 @@
               <text style="font-size: 16px; font-weight: 600">{{
                 file.fileName
               }}</text>
-              <el-icon><InfoFilled /></el-icon>
+              <!-- TODO -->
+              <el-icon v-if="currentRole !== 0" @click="updateFileInfo"
+                ><InfoFilled
+              /></el-icon>
             </div>
             <!-- 文件信息 -->
             <div class="file-info">

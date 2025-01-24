@@ -72,7 +72,7 @@
                   :key="index"
                   class="social-item"
                 >
-                  <el-icon color="#79b2ff" style="margin-top: 20px">
+                  <el-icon color="#79b2ff" style="margin-top: 20px" size="20">
                     <component :is="item.icon" />
                   </el-icon>
                   <p>{{ item.text }}</p>

@@ -58,7 +58,8 @@
   </div>
 </template>  
 
-<script>
+<script setup>
+import { ref } from "vue";
 import loginDialog from "../components/login/LoginDialog.vue";
 import Footer from "../components/headFoot/Footer.vue";
 import img1 from "../assets/static/1.png";
@@ -70,83 +71,68 @@ import {
   Reading,
   Cellphone,
 } from "@element-plus/icons-vue";
+import { useRouter } from "vue-router"; // 导入 vue-router
 
-export default {
-  components: {
-    loginDialog,
-    Footer,
+// 定义组件
+const router = useRouter(); // 使用路由
+const activeIndex = ref("1");
+const carouselItems = ref([
+  {
+    id: 1,
+    title: "智能生成PPT配音",
+    description: "快速生成专业课件配音，提升教学效果",
+    image: img1,
   },
-  data() {
-    return {
-      activeIndex: "1",
-      carouselItems: [
-        {
-          id: 1,
-          title: "智能生成PPT配音",
-          description: "快速生成专业课件配音，提升教学效果",
-          image: img1,
-        },
-        {
-          id: 2,
-          title: "智能语言学习助手",
-          description:
-            "提供发音评测、语音模仿、节奏训练等全方位语言学习解决方案",
-          image: img2,
-        },
-        {
-          id: 3,
-          title: "智能语音合成",
-          description: "打造专业的教学语音解决方案，让教学更生动",
-          image: img3,
-        },
-      ],
-      features: [
-        {
-          title: "声音样本库",
-          description: "详细的声音技术资料，以助于理解。",
-          icon: Microphone,
-          path: "/docs",
-        },
-        {
-          title: "有声PPT制作",
-          description: "专业的有声资料库，供学习使用。",
-          icon: Document,
-        },
-        {
-          title: "预设文本朗读",
-          description: "高效的文档助手，快速生成所需资料。",
-          icon: Reading,
-        },
-        {
-          title: "语言学习辅助",
-          description: "多种语言学习助手，提升学习效果。",
-          icon: Cellphone,
-          path: "/study",
-        },
-      ],
-      statistics: [
-        { value: "10,000+", label: "注册用户" },
-        { value: "50,000+", label: "文档阅读" },
-        { value: "98%", label: "用户满意度" },
-        { value: "24/7", label: "客服支持" },
-      ],
-    };
+  {
+    id: 2,
+    title: "智能语言学习助手",
+    description: "提供发音评测、语音模仿、节奏训练等全方位语言学习解决方案",
+    image: img2,
   },
-  methods: {
-    showLoginModal() {
-      this.$refs.loginDialog.visible = true;
-      this.$refs.loginDialog.isLogin = true; // 显示登录表单
-    },
-    showRegisterModal() {
-      this.$refs.loginDialog.visible = true;
-      this.$refs.loginDialog.isLogin = false; // 显示注册表单
-    },
-    handleFeatureClick(path) {
-      if (path) {
-        this.$router.push(path);
-      }
-    },
+  {
+    id: 3,
+    title: "智能语音合成",
+    description: "打造专业的教学语音解决方案，让教学更生动",
+    image: img3,
   },
+]);
+
+const features = ref([
+  {
+    title: "声音样本库",
+    description: "详细的声音技术资料，以助于理解。",
+    icon: Microphone,
+    path: "/docs",
+  },
+  {
+    title: "有声PPT制作",
+    description: "专业的有声资料库，供学习使用。",
+    icon: Document,
+  },
+  {
+    title: "预设文本朗读",
+    description: "高效的文档助手，快速生成所需资料。",
+    icon: Reading,
+  },
+  {
+    title: "语言学习辅助",
+    description: "多种语言学习助手，提升学习效果。",
+    icon: Cellphone,
+    path: "/study",
+  },
+]);
+
+const statistics = ref([
+  { value: "10,000+", label: "注册用户" },
+  { value: "50,000+", label: "文档阅读" },
+  { value: "98%", label: "用户满意度" },
+  { value: "24/7", label: "客服支持" },
+]);
+
+const handleFeatureClick = (path) => {
+  if (path) {
+    router.push(path);
+  }
 };
 </script>  
 
@@ -168,10 +154,10 @@ export default {
   padding: 25px 0;
   padding-bottom: 0;
   background-color: #f5f7fa;
-  height: 500px;
+  height: 460px;
 }
 .hero .el-carousel {
-  margin: 0 100px;
+  margin: 0 120px;
   height: 450px;
 }
 
@@ -193,17 +179,11 @@ export default {
 
 .features {
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1050px;
   margin: 0 auto;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.feature-card el-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
 }
 
 .feature-card {
@@ -211,12 +191,9 @@ export default {
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   cursor: pointer;
-  margin-bottom: 20px;
-  height: 300px;
-  width: 500px;
-  margin-left: auto;
-  margin-right: auto;
   border-radius: 10px;
+  margin: 10px 0;
+  height: 300px;
 }
 
 .feature-card.hover {
@@ -250,7 +227,7 @@ export default {
   padding: 30px 0;
   background: linear-gradient(to bottom, #f8f9fa, #ffffff);
   margin: 0 auto;
-  max-width: 1200px;
+  max-width: 1150px;
   display: flex;
   justify-content: space-around;
   border-radius: 10px;

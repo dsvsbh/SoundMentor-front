@@ -14,8 +14,11 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "AudioCommentary",
-};
+<script setup>
 </script>
+
+<style scoped>
+.comment-box {
+  padding: 30px;
+}
+</style>

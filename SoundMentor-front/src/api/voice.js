@@ -168,7 +168,27 @@ export const deleteFavorite = async (voiceId) => {
             return res;
         }
     } catch (error) {
-        console.log("出错：", error);
+        console.log("出错：", error.message);
+    }
+}
+
+// 分页查询训练声音列表
+export const getTrainedSoundPageQuery = async (form) => {
+    try {
+        const token = localStorage.getItem("token");
+        const res = await request.post(voiceApi + "/getSoundLIST", form, {
+            headers: {
+                Authorization: token
+            },
+        });
+        if (res.code === "0") {
+            return res;
+        } else {
+            console.error("获取失败", res.message);
+            return res;
+        }
+    } catch (error) {
+        console.log("获取出错：", error.message);
         return error.code;
     }
 }

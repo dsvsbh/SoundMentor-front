@@ -1,27 +1,4 @@
 <template>
-  <!-- <div>
-    <div class="progress-container">
-      <div
-        class="progress-circle"
-        v-for="(step, index) in steps"
-        :key="index"
-        :class="{ active: currentStep >= index + 1 }"
-        @click="goToStep(index + 1)"
-      >
-        {{ step }}
-      </div>
-      <div class="progress-line" :style="{ width: lineWidth }"></div>
-    </div>
-    <div class="buttons">
-      <el-button
-        v-for="(step, index) in steps"
-        :key="index"
-        @click="goToStep(index + 1)"
-      >
-        {{ step }}
-      </el-button>
-    </div>
-  </div> -->
   <div class="training-box">
     <text style="margin: 15px auto; font-size: 22px; font-weight: bold"
       >训练AI声音</text
@@ -29,6 +6,12 @@
     <text style="margin: 0 auto"
       >通过上传或录制声音样本，训练属于你的个性化AI声音</text
     >
+    <el-steps :active="activeStep" finish-status="success" class="step-bar">
+      <el-step title="采集声音" description="上传或录制声音" />
+      <el-step title="AI训练" description="训练模型" />
+      <el-step title="声音微调" description="调整参数" />
+      <el-step title="完成" description="添加到样本库" />
+    </el-steps>
     <div class="voice-training">
       <div class="upload-section">
         <el-upload
@@ -41,7 +24,7 @@
           <h3>上传音频文件</h3>
           <el-icon color="#24a3ff" size="50"><MessageBox /></el-icon>
           <div class="el-upload__text">点击或拖拽文件到这里上传</div>
-          <div class="el-upload__tip">支持格式：.mp3, .ogg, .wav</div>
+          <div class="el-upload__tip">支持格式：.mp3</div>
         </el-upload>
         <audio v-if="uploadedFiles.length > 0" :src="uploadedFiles[0].url" />
       </div>
@@ -70,9 +53,68 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-button type="primary" @click="startTraining" class="start-btn"
+      <el-button
+        type="primary"
+        @click="inputSoundName = true"
+        class="start-btn"
+        :disabled="uploadedFiles.length == 0"
         >开始训练</el-button
       >
+      <el-dialog v-model="inputSoundName" title="输入音频名称" width="30%">
+        <el-input v-model="soundName"></el-input>
+        <div style="margin-top: 20px; padding: 0 140px">
+          <el-button type="primary" @click="startTraining">确认</el-button>
+          <el-button>取消</el-button>
+        </div>
+      </el-dialog>
+    </div>
+    <div class="sound-list">
+      <el-table :data="paginatedSoundList" class="sound-tb" style="width: 100%">
+        <el-table-column prop="soundName" label="音频名称" />
+        <el-table-column prop="status" label="状态">
+          <template #default="{ row }">
+            <el-select
+              v-model="row.status"
+              @change="updateStatus(row)"
+              placeholder="选择状态"
+            >
+              <el-option label="创建" :value="0" />
+              <el-option label="执行中" :value="1" />
+              <el-option label="成功" :value="2" />
+              <el-option label="失败" :value="3" />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作">
+          <template #default="{ row }">
+            <text style="color: #409eff" @click="deleteSound(row.id)"
+              >删除</text
+            >
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+        @current-change="handleCurrentChange"
+        :page-size="pageSize"
+        :current-page="currentPage"
+        :page-sizes="[5, 10, 15]"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="totalCount"
+      />
+    </div>
+    <!-- TODO -->
+    <div style="margin: 20px auto">
+      <el-button
+        type="primary"
+        @click="adjustParameters"
+        :disabled="activeStep != 2"
+      >
+        调整参数
+      </el-button>
+      <el-button type="primary" @click="saveVoice" :disabled="activeStep != 3">
+        保存
+      </el-button>
     </div>
     <el-dialog title="确认删除" :visible="dialogVisible" @close="handleClose">
       <span>您确定要删除此音频文件吗？</span>
@@ -81,6 +123,7 @@
         <el-button type="primary" @click="deleteVoice">确认</el-button>
       </span>
     </el-dialog>
+    <div class="task-status" v-if="taskStatus === 1">1111111111</div>
   </div>
 </template>  
 
@@ -89,15 +132,17 @@ import { ref, computed, onMounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { ElMessage } from "element-plus";
 import { uploadFileService } from "@/api/file";
-import { canAddVoice } from "@/api/voice";
+import { canAddVoice, getTrainedSoundPageQuery } from "@/api/voice";
 import { taskExecutionService, getTaskDetailById } from "@/api/task";
 import { Upload, MessageBox, Mic } from "@element-plus/icons-vue";
-const uploadedFiles = ref([]);
 
+const uploadedFiles = ref([]);
+const activeStep = ref(0); // 当前步骤
+const userInfo = localStorage.getItem("userInfo");
 const handleFileUpload = async (file) => {
   const fileType = file.type;
 
-  if (fileType !== "audio/mpeg") {
+  if (fileType != "audio/mpeg") {
     console.log(fileType);
     ElMessage.error("只支持音频文件格式: .mp3");
     return false;
@@ -113,9 +158,10 @@ const handleFileUpload = async (file) => {
           url: response.data.fileUrl,
           duration: audio.duration.toFixed(2) + "s",
           size: (file.size / 1048576).toFixed(2) + "MB",
-          status: 0,
+          status: "未训练",
         });
       };
+      activeStep.value = 1;
     }
   } catch (error) {
     ElMessage.error("文件上传失败，请重试！");
@@ -129,15 +175,24 @@ let mediaRecorder;
 let audioChunks = [];
 //开始录制
 const startRecording = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  mediaRecorder = new MediaRecorder(stream);
+  try {
+    ElMessage({
+      type: "info",
+      message: "音频录制中",
+    });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
 
-  mediaRecorder.start();
-  isRecording.value = true;
+    mediaRecorder.start();
+    isRecording.value = true;
 
-  mediaRecorder.ondataavailable = (event) => {
-    audioChunks.push(event.data);
-  };
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+  } catch (error) {
+    ElMessage.error("无法使用麦克风: " + error.message);
+    console.error(error);
+  }
 };
 //停止录制
 const stopRecording = () => {
@@ -145,7 +200,7 @@ const stopRecording = () => {
   isRecording.value = false;
 
   mediaRecorder.onstop = async () => {
-    const audioBlob = new Blob(audioChunks, { type: "audio/mp3" });
+    const audioBlob = new Blob(audioChunks, { type: "audio/mpeg" });
     audioChunks = [];
 
     // 使用 UUID 生成文件名
@@ -169,6 +224,9 @@ const toggleRecording = () => {
   isRecording.value ? stopRecording() : startRecording();
 };
 
+const taskStatus = ref(0);
+let inputSoundName = ref(false);
+const soundName = ref("");
 // 训练逻辑
 const startTraining = async () => {
   // 进行判断能否添加
@@ -179,37 +237,37 @@ const startTraining = async () => {
   }
   // 构造数据
   const url = uploadedFiles.value[0].url;
-  const lastSlashIndex = url.lastIndexOf("/");
-
-  // 从最后一个 '/' 后一个字符开始提取子字符串
-  const subStringAfterLastSlash = url.substring(lastSlashIndex + 1);
-
-  // 在子字符串中找到最后一个 '.' 的位置
-  const lastDotIndex = subStringAfterLastSlash.lastIndexOf(".");
-
-  // 提取最后一个 '.' 前的部分
-  const name = subStringAfterLastSlash.substring(0, lastDotIndex);
-
   const data = {
     type: "VOICE_TRAIN",
     taskType: "VOICE_TRAIN",
     soundPath: url,
-    soundName: name,
+    soundName: soundName.value,
   };
   try {
     const response = await taskExecutionService(data);
-    if (response.code == 0) {
+    if (response.code == "0") {
       //把第一位状态修改
       ElMessage.success("执行成功！");
-      uploadedFiles.value[0].status = 1; //训练中
+      inputSoundName.value = false;
+      uploadedFiles.value[0].status = "训练中";
       localStorage.setItem("voiceTaskId", response.data); //保存当前任务id
-      // 状态如果为2就放在数组最后一位
+      activeStep.value = 2;
     } else {
       ElMessage.error("执行失败！", response.message);
     }
   } catch (err) {
     ElMessage.error(err.message);
   }
+};
+// 调整参数
+const adjustParameters = () => {
+  // 在这里处理参数调整逻辑...
+  ElMessage.success("参数调整完成！");
+  activeStep.value = 3; // 进入步骤 3
+};
+// 保存音频
+const saveVoice = () => {
+  activeStep.value = 4; // 完成
 };
 // 进行长轮询
 let intervalId;
@@ -222,6 +280,7 @@ onMounted(() => {
       console.log("查询----");
     }, 3000); //3s一次
   }
+  fetchAudioList(); // 调用获取音频列表的函数
 });
 
 // 查询任务状态
@@ -252,28 +311,87 @@ const handleClose = () => {
   fileToDelete.value = null;
   dialogVisible.value = false;
 };
-// test
-const steps = [1, 2, 3, 4];
-const currentStep = ref(1);
 
-const goToStep = (step) => {
-  if (step > currentStep.value) {
-    currentStep.value = step;
+// 训练历史
+// 定义响应式变量
+const soundList = ref([]);
+const paginatedSoundList = ref([]);
+const currentPage = ref(1);
+const pageSize = ref(5);
+const totalCount = ref(0);
+// 获取音频列表的函数
+const fetchAudioList = async () => {
+  const form = {
+    current: currentPage.value,
+    size: pageSize.value,
+  };
+  try {
+    const result = await getTrainedSoundPageQuery(form);
+    if (result.code === "0") {
+      console.log("11111111");
+      soundList.value = result.data;
+      totalCount.value = result.data.totalCount;
+      updatePaginatedList();
+    } else {
+      ElMessage.error(result.message);
+    }
+  } catch (error) {
+    ElMessage.error("获取数据失败: " + error.message);
   }
 };
 
-const lineWidth = computed(() => {
-  return `${((currentStep.value - 1) / (steps.length - 1)) * 100}%`;
-});
+// 更新分页列表
+// 更新分页列表
+const updatePaginatedList = () => {
+  if (Array.isArray(soundList.value)) {
+    const start = (currentPage.value - 1) * pageSize.value;
+    paginatedSoundList.value = soundList.value.slice(
+      start,
+      start + pageSize.value
+    );
+  } else {
+    paginatedSoundList.value = [];
+  }
+};
+
+// 处理当前页码变化
+const handleCurrentChange = (newPage) => {
+  currentPage.value = newPage;
+  updatePaginatedList();
+};
+
+// 处理页面大小变化
+const handlePageSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  currentPage.value = 1; // 重置到第一页
+  updatePaginatedList();
+};
+
+// 更新状态
+const updateStatus = (row) => {
+  // 在这里处理状态更新逻辑，例如发送请求到后端
+  ElMessage.success(`状态已更新为: ${row.status}`);
+};
+
+// 删除音频
+const deleteSound = async (id) => {
+  // 在这里处理删除逻辑，例如发送请求到后端
+  ElMessage.success(`音频 ID ${id} 已删除`);
+};
 </script>
 
 <style scoped>
+.step-bar {
+  width: 1000px;
+  margin: 20px 80px;
+}
 .training-box {
   margin: 0 150px;
   background-color: #fff;
   display: flex;
   flex-direction: column;
   margin-bottom: 30px;
+  border-radius: 0 0 10px 10px;
 }
 .voice-training {
   flex: 1;
@@ -281,8 +399,9 @@ const lineWidth = computed(() => {
   flex-direction: row;
   align-items: center;
   height: 400px;
-  padding: 15px;
+  padding: 15px 50px;
   margin-bottom: 30px;
+  column-gap: 30px;
 }
 .upload-demo {
   height: 100%;
@@ -301,49 +420,9 @@ const lineWidth = computed(() => {
   border-radius: 5px;
   margin-bottom: 10px;
 }
-/* test */
-.progress-container {
-  display: flex;
-  align-items: center;
-  position: relative;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
 
-.progress-circle {
-  border: 2px solid #d3d3d3;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: border-color 0.3s;
-  cursor: pointer;
-}
-
-.progress-circle.active {
-  border-color: #409eff;
-}
-
-.progress-line {
-  height: 2px;
-  background-color: #9a3838;
-  position: absolute;
-  top: 14px;
-  z-index: -1;
-  transition: width 0.3s;
-}
-.progress-line.active {
-  background-color: #409eff;
-}
-
-.buttons {
-  display: flex;
-  justify-content: space-between;
-}
 .training-list {
-  margin: 20px;
+  margin: 20px 40px;
   background-color: #f5f7fa;
   padding: 20px;
   border-radius: 10px;
@@ -356,5 +435,17 @@ const lineWidth = computed(() => {
 }
 .start-btn {
   margin: 10px auto;
+}
+.sound-list {
+  margin: 20px 40px;
+  background-color: #f5f7fa;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sound-tb {
+  border-radius: 10px;
 }
 </style>

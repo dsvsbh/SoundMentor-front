@@ -1,30 +1,40 @@
 <template>
   <div class="phonic-container">
     <div class="header">
-      <text style="font-size: 30px; font-weight: bold">语言学习辅助</text>
+      <div style="font-size: 30px; font-weight: bold; margin-top: 20px">
+        语言学习辅助
+      </div>
       <div class="bar"></div>
     </div>
     <div class="cards">
       <div class="card-item" v-for="item in studyList" :key="item.id">
         <div class="title">
-          <text>
+          <div class="text">
             {{ item.title }}
-          </text>
+          </div>
         </div>
         <div class="function">
           <div class="func">
             <div class="icon">
-              <el-icon><List /></el-icon>
+              <el-icon color="#409eff" size="30" style="padding: 10px"
+                ><List
+              /></el-icon>
             </div>
-            <div class="item-title">单词练习</div>
-            <div class="content">基础发音练习，掌握声调和音节</div>
+            <div class="right">
+              <div class="item-title">单词练习</div>
+              <div class="content">基础发音练习，掌握声调和音节</div>
+            </div>
           </div>
           <div class="func">
             <div class="icon">
-              <el-icon><Avatar /></el-icon>
+              <el-icon color="#409eff" size="30" style="padding: 10px"
+                ><Avatar
+              /></el-icon>
             </div>
-            <div class="item-title">演讲练习</div>
-            <div class="content">长篇演讲练习，锻炼表达能力</div>
+            <div class="right">
+              <div class="item-title">演讲练习</div>
+              <div class="content">长篇演讲练习，锻炼表达能力</div>
+            </div>
           </div>
         </div>
       </div>
@@ -54,10 +64,52 @@ const studyList = ref([
 <style scoped>
 .header {
   height: 60px;
+  margin-left: 30px;
 }
 .bar {
   height: 10px;
   width: 122px;
   background: linear-gradient(135deg, #3fa4fa, #36cfdd);
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px 20px;
+  padding: 30px;
+}
+.card-item {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.title {
+  color: #ffffff;
+  background: linear-gradient(135deg, #3fa4fa, #36cfdd);
+  border-radius: 8px 8px 0 0;
+  height: 70px;
+  align-items: center;
+}
+.title .text {
+  padding: 23px 30px;
+  font-size: 22px;
+  font-weight: bold;
+}
+.func {
+  display: flex;
+  align-items: center;
+  background-color: #f5f7fa;
+  margin: 15px 15px;
+  border-radius: 8px;
+}
+.func .right {
+  display: flex;
+  flex-direction: column;
+}
+.func .icon {
+  height: 50px;
+  width: 50px;
+  background-color: #ffffff;
+  margin: 10px;
+  border-radius: 8px;
 }
 </style>
