@@ -10,6 +10,12 @@
       >
         声音训练
       </el-menu-item>
+      <el-menu-item
+        index="sound-trained-list"
+        @click="activeTab = 'sound-trained-list'"
+      >
+        声音训练记录
+      </el-menu-item>
     </el-menu>
     <!-- 声音样本库 -->
     <div v-if="activeTab === 'voice-library'">
@@ -20,6 +26,10 @@
     <div v-if="activeTab === 'voice-training'">
       <VoiceTraining />
     </div>
+    <!-- 声音训练记录 -->
+    <div v-if="activeTab === 'sound-trained-list'">
+      <VoiceRecords />
+    </div>
     <Footer />
   </div>
 </template>  
@@ -28,6 +38,7 @@
 import Footer from "../components/headFoot/Footer.vue";
 import VoiceLibrary from "../components/voice/VoiceLibrary.vue";
 import VoiceTraining from "../components/voice/VoiceTraining.vue";
+import VoiceRecords from "@/components/voice/VoiceRecords.vue";
 import { ref } from "vue";
 
 const activeTab = ref("voice-library");
