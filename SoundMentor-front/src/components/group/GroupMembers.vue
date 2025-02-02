@@ -58,10 +58,13 @@
     </el-dialog>
     <!-- 修改会话 -->
     <el-dialog title="选择角色" v-model="visible" width="30%">
-      <el-select v-model="selectedRole" placeholder="请选择角色">
-        <el-option label="CREATOR" value="CREATOR"></el-option>
-        <el-option label="ADMIN" value="ADMIN"></el-option>
-        <el-option label="USER" value="USER"></el-option>
+      <el-select
+        v-model="selectedRole"
+        placeholder="请选择角色"
+        style="margin-bottom: 20px"
+      >
+        <el-option label="组织管理员" value="ADMIN"></el-option>
+        <el-option label="普通成员" value="USER"></el-option>
       </el-select>
       <span class="dialog-footer">
         <el-button @click="visible = false">取消</el-button>
@@ -94,7 +97,7 @@ import { useRouter } from "vue-router";
 const visible = ref(false);
 const isDelete = ref(false);
 const isKick = ref(false);
-const selectedRole = ref("");
+const selectedRole = ref("普通成员");
 const members = ref([]);
 const selectedRow = ref(null);
 
@@ -138,7 +141,7 @@ const handleEdit = (row) => {
   } else {
     visible.value = true;
     selectedRow.value = row;
-    selectedRole.value = row.organizationRole;
+    selectedRole.value = roleLabels[row.organizationRole];
   }
 };
 
@@ -237,6 +240,9 @@ const confirmUpdate = async () => {
   margin-bottom: 40px;
   border-radius: 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+.dialog-footer {
+  margin: 0 138px;
 }
 </style>
 

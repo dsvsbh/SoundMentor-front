@@ -120,6 +120,8 @@ export default {
         await logoutService(); // 调用登出接口
         localStorage.removeItem("token");
         localStorage.removeItem("userInfo");
+        localStorage.removeItem("voiceTaskId");
+        localStorage.removeItem("isLogin");
         store.logout(); // 更新状态
         ElMessage.success("成功退出登录");
         router.push("/");
@@ -176,7 +178,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   background-color: #f5f5f5;
-  width: 100%;
 }
 .el-header {
   padding: 0;

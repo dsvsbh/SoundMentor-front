@@ -64,6 +64,7 @@
         </el-menu>
       </el-aside>
       <el-main class="main">
+        <!-- 基本信息 -->
         <template v-if="activeTab === '基本信息'">
           <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
             >基本信息</text
@@ -98,6 +99,7 @@
             </el-form>
           </div>
         </template>
+        <!-- 修改密码 -->
         <template v-if="activeTab === '修改密码'">
           <text style="font-size: 24px; font-weight: bold; margin-left: 60px"
             >修改密码</text
@@ -312,7 +314,6 @@ const saveUserInfo = async () => {
     phone: userForm.value.phone || "",
     headImg: userForm.value.headImg || "",
   };
-  console.log(userInfo);
 
   try {
     const res = await updateUserInfoService(userInfo);
@@ -345,14 +346,18 @@ const updatePassword = async () => {
     oldPassword: passwordForm.value.oldPassword,
     newPassword: passwordForm.value.newPassword,
   };
-  const res = await updateUserPasswordService(form);
-  if (res.code == 0) {
-    ElMessage.success("修改成功！");
-    passwordForm.value.oldPassword = "";
-    passwordForm.value.newPassword = "";
-    passwordForm.value.confirmPassword = "";
-  } else {
-    ElMessage.error(res.message);
+  try {
+    const res = await updateUserPasswordService(form);
+    if (res.code === "0") {
+      ElMessage.success("修改成功！");
+      passwordForm.value.oldPassword = "";
+      passwordForm.value.newPassword = "";
+      passwordForm.value.confirmPassword = "";
+    } else {
+      ElMessage.error(res.data);
+    }
+  } catch (err) {
+    ElMessage.error(err.data);
   }
 };
 // TODO  上传用户文件

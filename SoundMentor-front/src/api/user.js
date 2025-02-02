@@ -83,25 +83,38 @@ export const logoutService = async () => {
 };
 // 修改用户信息
 export const updateUserInfoService = async (userInfo) => {
-    const token = localStorage.getItem('token');
-    console.log(userInfo);
-    const response = await request.post('/user/updateUserInfo', userInfo, {
-        headers: { Authorization: token },
-        'Content-Type': 'application/json'
-    });
-    return response.data;
+    try {
+        const token = localStorage.getItem('token');
+        console.log(userInfo);
+        const response = await request.post('/user/updateUserInfo', userInfo, {
+            headers: { Authorization: token },
+            'Content-Type': 'application/json'
+        });
+        if (response.code === "0") {
+            await getUserInfoService();
+            return response.data;
+        } else {
+            console.log("获取失败：", response.message);
+        }
+    } catch (err) {
+        Promise.reject(err);
+    }
 };
 // 修改用户密码
 export const updateUserPasswordService = (passwordInfo) => {
-    const token = localStorage.getItem('token');
-    const response = request.post('/user/updatePassword', JSON.stringify(passwordInfo), {
-        headers: {
-            Authorization: token,
-            'Content-Type': 'application/json'
-        },
+    try {
+        const token = localStorage.getItem('token');
+        const response = request.post('/user/updatePassword', JSON.stringify(passwordInfo), {
+            headers: {
+                Authorization: token,
+                'Content-Type': 'application/json'
+            },
 
-    });
-    return response.data;
+        });
+        return response;
+    } catch (err) {
+        console.log(err.message);
+    }
 }
 
 // 用户文件列表（条件动态分页）

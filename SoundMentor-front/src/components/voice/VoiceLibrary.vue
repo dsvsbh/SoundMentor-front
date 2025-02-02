@@ -26,6 +26,7 @@
     </el-tabs>
 
     <!-- 音频列表 -->
+
     <div class="audio-items">
       <div class="audio-card" v-for="audio in audioList" :key="audio.id">
         <div class="audio-card-header">
@@ -101,8 +102,9 @@
       :page-size="pageSize"
       :page-sizes="[3, 6, 9, 12]"
       :total="totalAudioCount"
-      layout="total, prev, pager, next, jumper"
+      layout="total, sizes,prev, pager, next, jumper"
       @current-change="handleCurrentChange"
+      @size-change="handlePageSizeChange"
     ></el-pagination>
   </div>
 </template>
@@ -184,8 +186,12 @@ watch([activeSubTab, searchQuery, currentPage], fetchAudioLibrary, {
 const handleCurrentChange = (page) => {
   currentPage.value = page;
 };
-
-fetchAudioLibrary();
+// 处理页面大小变化
+const handlePageSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  currentPage.value = 1; // 重置到第一页
+  fetchAudioLibrary();
+};
 
 // 创建音频元素
 const audioElement = ref(new Audio());
@@ -262,7 +268,7 @@ const delFavorite = async (audio) => {
   align-items: center;
   gap: 20px;
   background-color: white;
-  margin: 0 150px;
+  margin: 0 140px;
   margin-bottom: 30px;
   border-radius: 0 0 15px 15px;
 }
@@ -274,9 +280,7 @@ const delFavorite = async (audio) => {
 .tabs {
   width: 100%;
 }
-
 .audio-items {
-  width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px 20px;
@@ -285,10 +289,11 @@ const delFavorite = async (audio) => {
 }
 
 .audio-card {
+  max-width: 100%;
+  width: auto;
   border: 1px solid #e4e7ed;
   padding: 15px;
   border-radius: 8px;
-  width: 90%;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

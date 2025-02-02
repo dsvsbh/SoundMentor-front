@@ -185,8 +185,9 @@ const closeHandler = () => {
 .ppt-container {
   background-color: #f5f7fa;
   height: 100%;
-  padding: 0 165px;
   margin-bottom: 30px;
+  margin: 0 auto;
+  width: 1175px;
 }
 
 .title {

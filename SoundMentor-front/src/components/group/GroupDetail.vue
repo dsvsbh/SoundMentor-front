@@ -186,7 +186,7 @@
   >
     <span class="dialog-footer">
       <el-button @click="isDelete = false">取消</el-button>
-      <el-button type="primary" @click="confirmDelete">确认</el-button>
+      <el-button type="danger" @click="confirmDelete">确认</el-button>
     </span>
   </el-dialog>
   <Footer />
@@ -444,7 +444,9 @@ const getShareCode = async (id) => {
   try {
     const res = await getOrganizationShareCodeService(id);
     if (res) {
-      ElMessage.success(`已获取组织邀请码：${id}-${res}`);
+      const shareCode = `${id}-${res}`;
+      await navigator.clipboard.writeText(shareCode); // 复制到剪贴板
+      ElMessage.success(`已复制邀请码：${shareCode}`);
     } else {
       ElMessage.error(res.message || "获取邀请码失败");
     }
@@ -461,7 +463,7 @@ const handleDeleteGroup = async () => {
     ElMessage.error("没有权限操作！");
     return;
   } else {
-    isDelete.value = true; // 可能触发确认对话框
+    isDelete.value = true;
   }
 };
 
@@ -635,5 +637,8 @@ const isControlVisible = ref(false);
   display: flex;
   justify-content: space-around;
   align-items: center;
+}
+.dialog-footer {
+  margin: 0 135px;
 }
 </style>

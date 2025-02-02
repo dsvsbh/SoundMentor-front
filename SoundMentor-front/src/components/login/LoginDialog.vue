@@ -233,7 +233,7 @@ export default {
       this.isLogin = !this.isLogin;
     },
     async handleRegister() {
-      this.isLoadingRegister = true; // Set loading state to true
+      this.isLoadingRegister = true;
       this.$refs.registerFormRef.validate(async (valid) => {
         if (valid) {
           try {
@@ -247,23 +247,22 @@ export default {
             });
             ElMessage.success("注册成功");
 
-            // Switch to login form
             this.isLogin = true;
             this.$refs.registerFormRef.resetFields();
           } catch (error) {
             console.error("注册失败:", error);
             ElMessage.error(error.message || "注册失败");
           } finally {
-            this.isLoadingRegister = false; // Reset loading state
+            this.isLoadingRegister = false;
           }
         } else {
-          this.isLoadingRegister = false; // Reset loading state if validation fails
+          this.isLoadingRegister = false;
         }
       });
     },
 
     async handleLogin() {
-      this.isLoadingLogin = true; // Set loading state to true
+      this.isLoadingLogin = true;
       this.$refs.loginFormRef.validate(async (valid) => {
         if (valid) {
           try {
@@ -278,7 +277,7 @@ export default {
 
               const storage = this.rememberMe ? localStorage : sessionStorage;
               storage.setItem("token", res.data.token);
-
+              localStorage.setItem("isLogin", true);
               this.$router.push("/");
             } else {
               ElMessage.error(res.data || "登录失败");

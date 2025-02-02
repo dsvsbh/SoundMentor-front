@@ -35,8 +35,9 @@ const activeTab = ref("phonic-learn");
   display: flex;
   flex-direction: column;
   background-color: white;
-  margin: 30px 150px;
+  margin: 30px auto;
   border-radius: 15px;
   padding: 0 20px;
+  width: 1135px;
 }
 </style>

@@ -60,8 +60,10 @@
         :disabled="uploadedFiles.length == 0"
         >开始训练</el-button
       >
+      <!-- TODO -->
       <el-dialog v-model="inputSoundName" title="输入音频名称" width="30%">
-        <el-input v-model="soundName"></el-input>
+        <el-input v-model="soundName" label="音频名称"></el-input>
+        <el-input v-model="soundDescription" label="音频描述"></el-input>
         <div style="margin-top: 20px; padding: 0 140px">
           <el-button type="primary" @click="startTraining">确认</el-button>
           <el-button>取消</el-button>
@@ -193,6 +195,7 @@ const toggleRecording = () => {
 const taskStatus = ref(0);
 let inputSoundName = ref(false);
 const soundName = ref("");
+const soundDescription = ref("");
 // 训练逻辑
 const startTraining = async () => {
   // 进行判断能否添加
@@ -208,6 +211,7 @@ const startTraining = async () => {
     taskType: "VOICE_TRAIN",
     soundPath: url,
     soundName: soundName.value,
+    description: soundDescription.value,
   };
   try {
     const response = await taskExecutionService(data);
@@ -280,11 +284,12 @@ const handleClose = () => {
 
 <style scoped>
 .step-bar {
-  width: 1000px;
+  width: auto;
+  max-width: 1000px;
   margin: 20px 80px;
 }
 .training-box {
-  margin: 0 150px;
+  margin: 0 140px;
   background-color: #fff;
   display: flex;
   flex-direction: column;

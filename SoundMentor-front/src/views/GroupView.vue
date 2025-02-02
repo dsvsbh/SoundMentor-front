@@ -18,7 +18,7 @@
         </el-button>
       </el-button-group>
     </div>
-    <el-space wrap style="margin-left: 30px; gap: 10px 45px">
+    <el-space wrap style="margin-left: 20px; gap: 10px 45px">
       <el-card class="create-card" shadow="hover" @click="dialogVisible = true">
         <el-icon size="30" style="margin-left: 15px"><Plus /></el-icon>
         <div>创建组织</div>
@@ -202,7 +202,9 @@ const getShareCode = async (id) => {
   try {
     const res = await getOrganizationShareCodeService(id);
     if (res) {
-      ElMessage.success(`已获取组织邀请码：${id}-${res}`);
+      const shareCode = `${id}-${res}`;
+      await navigator.clipboard.writeText(shareCode); // 复制到剪贴板
+      ElMessage.success(`已复制邀请码：${shareCode}`);
     } else {
       ElMessage.error(res.message || "获取邀请码失败");
     }
@@ -267,11 +269,12 @@ onMounted(() => {
 <style scoped>
 .group-view {
   padding: 50px 50px;
-  margin: 30px 150px;
+  margin: 30px auto;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   position: relative;
+  width: 1070px;
 }
 .bar {
   width: 122px;

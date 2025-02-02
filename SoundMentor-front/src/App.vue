@@ -18,6 +18,7 @@ export default {
 <style scoped>
 .app {
   background-color: #f5f7fa;
+  width: 100%;
 }
 </style>
 

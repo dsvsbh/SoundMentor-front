@@ -87,12 +87,9 @@ export const deleteSoundLib = async (idList) => {
     try {
 
         const token = localStorage.getItem("token");
-        const res = await request.post(voiceApi + "/deleteSound", {
+        const res = await request.post(voiceApi + "/delSoundList", idList, {
             headers: {
                 Authorization: token
-            },
-            data: {
-                idList: idList
             }
         });
         console.log("请求成功", res);
@@ -185,10 +182,8 @@ export const getTrainedSoundPageQuery = async (form) => {
             return res;
         } else {
             console.error("获取失败", res.message);
-            return res;
         }
     } catch (error) {
         console.log("获取出错：", error.message);
-        return error.code;
     }
 }

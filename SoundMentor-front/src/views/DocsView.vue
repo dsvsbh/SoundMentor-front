@@ -30,8 +30,9 @@
     <div v-if="activeTab === 'sound-trained-list'">
       <VoiceRecords />
     </div>
-    <Footer />
   </div>
+
+  <Footer />
 </template>  
 
 <script setup>
@@ -48,14 +49,16 @@ const activeTab = ref("voice-library");
 .docs-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: 30px 15px;
+  min-height: 40vh;
+  padding: 30px 0;
+  margin: 0 auto;
   background-color: #f5f7fa;
+  width: 1450px;
 }
 .menu {
   margin-top: 30px;
   background-color: white;
-  margin: 0 150px;
+  margin: 0 140px;
   border-radius: 15px 15px 0 0;
   padding: 0 20px;
 }
