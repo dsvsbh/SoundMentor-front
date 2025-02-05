@@ -52,7 +52,7 @@ export const getPptTask = async (userPptId) => {
         const res = await request.get(`/task/getPptTask/${userPptId}`, {
             headers: { Authorization: token },
         });
-        if (res.code == 0) {
+        if (res.code === "0") {
             return res.data;
         }
         else {

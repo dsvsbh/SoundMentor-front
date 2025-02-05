@@ -121,12 +121,13 @@ const router = useRouter();
 const organizationId = Number(router.currentRoute.value.params.id);
 
 onMounted(async () => {
+  fetchMembers();
+});
+
+const fetchMembers = async () => {
   const res = await getOrganizationMemberListService(organizationId);
   members.value = res;
-  if (res.length === 0) {
-    router.push("/group");
-  }
-});
+};
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -134,25 +135,13 @@ const formatDate = (dateString) => {
 };
 
 const handleEdit = (row) => {
-  const name = JSON.parse(localStorage.getItem("userInfo") || "{}").name;
-  if (members.value[0].name !== name) {
-    ElMessage.error("没有权限操作！");
-    return;
-  } else {
-    visible.value = true;
-    selectedRow.value = row;
-    selectedRole.value = roleLabels[row.organizationRole];
-  }
+  visible.value = true;
+  selectedRow.value = row;
+  selectedRole.value = roleLabels[row.organizationRole];
 };
 
 const handleDeleteGroup = async () => {
-  const name = JSON.parse(localStorage.getItem("userInfo") || "{}").name;
-  if (members.value[0].name !== name) {
-    ElMessage.error("没有权限操作！");
-    return;
-  } else {
-    isDelete.value = true;
-  }
+  isDelete.value = true;
 };
 
 const confirmDelete = async () => {
@@ -170,14 +159,8 @@ const confirmDelete = async () => {
 };
 
 const handleDelete = (row) => {
-  const name = JSON.parse(localStorage.getItem("userInfo") || "{}").name;
-  if (name !== members.value[0].name) {
-    ElMessage.error("没有权限操作！");
-    return;
-  } else {
-    selectedRow.value = row;
-    isKick.value = true;
-  }
+  selectedRow.value = row;
+  isKick.value = true;
 };
 
 const confirmKick = async () => {
@@ -196,12 +179,11 @@ const confirmKick = async () => {
     if (res.code == 0) {
       ElMessage.success("踢出成功！");
       isKick.value = false;
-      window.location.reload();
+      fetchMembers();
     }
   } catch (error) {
     ElMessage.error(error.message);
     return;
-    //window.location.reload();
   }
 };
 
@@ -219,10 +201,12 @@ const confirmUpdate = async () => {
 
   try {
     const result = await updateUserRoleService(data);
-    console.log("角色更新成功", result);
-    ElMessage.success("角色更新成功");
-    visible.value = false;
-    window.location.reload();
+    if (result.code === "0") {
+      console.log("角色更新成功", result);
+      ElMessage.success("角色更新成功");
+      visible.value = false;
+      fetchMembers();
+    }
   } catch (error) {
     console.error("更新用户角色时出错", error);
     ElMessage.error("更新失败，请重试");

@@ -458,13 +458,7 @@ const getShareCode = async (id) => {
 
 // 解散组织
 const handleDeleteGroup = async () => {
-  const name = JSON.parse(localStorage.getItem("userInfo") || "{}").name;
-  if (members.value[0]?.name !== name) {
-    ElMessage.error("没有权限操作！");
-    return;
-  } else {
-    isDelete.value = true;
-  }
+  isDelete.value = true;
 };
 
 // 确认删除

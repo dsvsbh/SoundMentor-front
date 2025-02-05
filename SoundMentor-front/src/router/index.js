@@ -9,6 +9,7 @@ import GroupDetail from '../components/group/GroupDetail.vue'
 import PPTView from '../views/PPTView.vue'
 import GroupMembers from '../components/group/GroupMembers.vue'
 import StudyView from '@/views/StudyView.vue'
+import PptEdit from '@/views/PptEdit.vue'
 //定义路由关系
 const routes = [
     {
@@ -66,6 +67,14 @@ const routes = [
         component: PPTView,
         meta: {
             title: 'PPT制作'
+        }
+    },
+    {
+        path: '/pptEdit',
+        name: 'pptEdit',
+        component: PptEdit,
+        meta: {
+            title: '内容编辑'
         }
     },
     {

@@ -190,6 +190,7 @@ const selectUserFile = async (file) => {
   const res = await uploadFileToGroup(form);
   if (res.code === "0") {
     ElMessage.success("上传成功！");
+    loading.value = false;
   } else {
     ElMessage.error("上传失败:", res.message);
   }

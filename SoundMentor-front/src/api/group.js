@@ -103,21 +103,22 @@ export const joinOrganizationService = async (data) => {
 //  更新组织内的用户角色
 // 只能修改ADMIN和USER角色，不能修改CREATOR角色,只有CREATOR角色可以修改其他用户角色
 export const updateUserRoleService = async (data) => {
+    let response;
     try {
         const token = localStorage.getItem('token');
         console.log("提交的表单----", data);
-        const response = await request.put('/organization/updateRole', JSON.stringify(data), {
+        response = await request.put('/organization/updateRole', JSON.stringify(data), {
             headers: { Authorization: token, 'Content-Type': 'application/json' },
         });
 
-        if (response.code != 0) {
+        if (response.code === "0") {
+            return response;
+        } else {
             throw new Error(`更新用户角色失败，状态码: ${response.code}`);
         }
 
-        const result = await response.json();
-        return result;
     } catch (error) {
-        console.error('Error updating user role:', error);
+        console.error('出错了：', error.message);
         throw error;
     }
 }

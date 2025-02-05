@@ -56,12 +56,11 @@
             />
           </template>
         </el-skeleton>
-        <!-- TODO调整速度 -->
         <el-slider
           v-model="audio.speed"
-          max="2"
-          min="0.5"
-          step="0.1"
+          :max="2"
+          :min="0.5"
+          :step="0.1"
           @change="updatePlaybackRate"
         ></el-slider>
         <div class="action-buttons">
@@ -173,6 +172,7 @@ const fetchAudioLibrary = async () => {
       soundName: formatFileName(audio.soundName, 10),
       description: formatFileName(audio.description, 30),
       isPlaying: false,
+      speed: 1.0, // 默认播放速度为 1.0
     }));
     totalAudioCount.value = response.data.total;
   } catch (error) {
@@ -196,7 +196,12 @@ const handlePageSizeChange = (newSize) => {
 // 创建音频元素
 const audioElement = ref(new Audio());
 
-// 播放音频的函数
+// 更新播放速度的函数
+const updatePlaybackRate = (speed) => {
+  audioElement.value.playbackRate = speed;
+};
+
+// 在播放音频时，设置播放速度
 const playAudio = (audio) => {
   console.log(audio.soundUrl);
   if (audioElement.value.src && audioElement.value.src !== audio.soundUrl) {
@@ -205,6 +210,7 @@ const playAudio = (audio) => {
   }
 
   audioElement.value.src = audio.soundUrl;
+  audioElement.value.playbackRate = audio.speed; // 设置播放速度
   audioElement.value.play();
   audio.isPlaying = true;
 };
