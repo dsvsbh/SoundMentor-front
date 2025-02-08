@@ -71,7 +71,6 @@ const routeToEdit = async (taskId) => {
     path: "/pptEdit",
     query: {
       taskId: taskId,
-      firstPageRes: pptTaskRes.value[0],
     },
   });
 };

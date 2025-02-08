@@ -23,10 +23,11 @@
               <img :src="currentPage.imgUrl" alt="" />
             </div>
             <textarea
-              name="explain"
               class="explain"
-              v-model="summaryValue"
-            ></textarea>
+              v-if="currentPage"
+              v-model="currentPage.summary"
+            />
+
             <div class="audio" v-if="currentPage">
               <div class="left">
                 <text style="font-size: 20px; font-weight: 400">
@@ -68,11 +69,10 @@ const route = useRoute();
 const uploadPPTfile = ref([]);
 const taskId = ref(null);
 const currentPage = ref(null); // 初始为第一张幻灯片
-const summaryValue = computed(() => {
-  return currentPage ? currentPage.summary : "";
-});
+
 const selectPage = (index) => {
   currentPage.value = uploadPPTfile.value[index];
+  //console.log(currentPage.value.summary);
 };
 onMounted(() => {
   taskId.value = route.query.taskId;

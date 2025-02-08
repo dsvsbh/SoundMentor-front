@@ -10,6 +10,9 @@ import PPTView from '../views/PPTView.vue'
 import GroupMembers from '../components/group/GroupMembers.vue'
 import StudyView from '@/views/StudyView.vue'
 import PptEdit from '@/views/PptEdit.vue'
+import PhonicsLearningAids from '@/components/study/PhonicsLearningAids.vue'
+import AudioCommentary from '@/components/study/AudioCommentary.vue'
+import ReadingView from '@/views/ReadingView.vue'
 //定义路由关系
 const routes = [
     {
@@ -83,6 +86,30 @@ const routes = [
         component: StudyView,
         meta: {
             title: '语音辅助学习'
+        }
+    },
+    {
+        path: '/study/learn',
+        name: 'learn',
+        component: PhonicsLearningAids,
+        meta: {
+            title: '语言学习辅助'
+        }
+    },
+    {
+        path: '/study/audio',
+        name: 'audio',
+        component: AudioCommentary,
+        meta: {
+            title: '个性化语音讲解'
+        }
+    },
+    {
+        path: '/read',
+        name: 'ReadingView',
+        component: ReadingView,
+        meta: {
+            title: '预设文本朗读'
         }
     }
 ]

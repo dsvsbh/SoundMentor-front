@@ -360,8 +360,17 @@ const updatePassword = async () => {
     ElMessage.error(err.data);
   }
 };
-// TODO  上传用户文件
-const handleFile = async (file) => {};
+const handleFile = async (file) => {
+  try {
+    const response = await uploadFileService(file);
+    if (response.data && response.data.fileUrl) {
+      console.log("上传成功", response.data.fileUrl);
+    }
+  } catch (error) {
+    ElMessage.error("文件上传失败，请重试！");
+  }
+  return false;
+};
 
 // 获取文件逻辑
 const files = ref([]);
@@ -517,7 +526,7 @@ watch([userSelectedFileTypes, userSearchTerm], () => {
 }
 .header {
   width: 1080px;
-  height: 260px;
+  height: 160px;
   margin: 30px auto;
   border-radius: 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
@@ -530,7 +539,7 @@ watch([userSelectedFileTypes, userSearchTerm], () => {
   top: 40%;
   left: 50%;
   width: 1000px;
-  height: 120px;
+  height: 80px;
   background: linear-gradient(135deg, #3fa4fa, #36cfdd);
   border-radius: 50%;
   transform: translate(-50%, -50%);
@@ -538,10 +547,10 @@ watch([userSelectedFileTypes, userSearchTerm], () => {
   z-index: 0;
 }
 .header .avatar {
-  width: 150px;
-  height: 150px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  margin: 20px 60px;
+  margin: 15px 60px;
   background-color: #fff;
   border: 1px solid #fff;
   position: relative;
@@ -563,16 +572,16 @@ watch([userSelectedFileTypes, userSearchTerm], () => {
 }
 .header .username {
   color: black;
-  font-size: 30px;
+  font-size: 22px;
 }
 .header .id {
   margin-left: 20px;
-  margin-top: 10px;
+  margin-top: 5px;
   color: #909399;
 }
 .header .registration-date {
   margin-left: 20px;
-  margin-top: 10px;
+  margin-top: 5px;
   color: #909399;
 }
 .aside {

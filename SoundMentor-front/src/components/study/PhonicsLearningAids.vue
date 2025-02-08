@@ -1,49 +1,65 @@
 <template>
-  <div class="phonic-container">
-    <div class="header">
-      <div style="font-size: 30px; font-weight: bold; margin-top: 20px">
-        语言学习辅助
-      </div>
-      <div class="bar"></div>
-    </div>
-    <div class="cards">
-      <div class="card-item" v-for="item in studyList" :key="item.id">
-        <div class="title">
-          <div class="text">
-            {{ item.title }}
-          </div>
+  <div class="study-container">
+    <div class="phonic-container">
+      <div class="header">
+        <div
+          style="
+            font-size: 27px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #5d5d5d;
+          "
+        >
+          语言学习辅助
         </div>
-        <div class="function">
-          <div class="func">
-            <div class="icon">
-              <el-icon color="#409eff" size="30" style="padding: 10px"
-                ><List
-              /></el-icon>
-            </div>
-            <div class="right">
-              <div class="item-title">单词练习</div>
-              <div class="content">基础发音练习，掌握声调和音节</div>
+        <div class="bar"></div>
+      </div>
+      <el-divider />
+      <div class="cards">
+        <div class="card-item" v-for="item in studyList" :key="item.id">
+          <div class="title">
+            <div class="text">
+              {{ item.title }}
             </div>
           </div>
-          <div class="func">
-            <div class="icon">
-              <el-icon color="#409eff" size="30" style="padding: 10px"
-                ><Avatar
-              /></el-icon>
+          <div class="function">
+            <div class="func">
+              <div class="icon">
+                <el-icon color="#409eff" size="30" style="padding: 10px"
+                  ><List
+                /></el-icon>
+              </div>
+              <div class="right">
+                <div class="item-title">单词练习</div>
+                <div class="content" style="font-size: 12px; color: #909399">
+                  基础发音练习，掌握声调和音节
+                </div>
+              </div>
             </div>
-            <div class="right">
-              <div class="item-title">演讲练习</div>
-              <div class="content">长篇演讲练习，锻炼表达能力</div>
+            <div class="func">
+              <div class="icon">
+                <el-icon color="#409eff" size="30" style="padding: 10px"
+                  ><Avatar
+                /></el-icon>
+              </div>
+              <div class="right">
+                <div class="item-title">演讲练习</div>
+                <div class="content" style="font-size: 12px; color: #909399">
+                  长篇演讲练习，锻炼表达能力
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <script setup>
 import { ref } from "vue";
+import Footer from "../headFoot/Footer.vue";
 import { List, Avatar } from "@element-plus/icons-vue";
 const studyList = ref([
   {
@@ -62,6 +78,18 @@ const studyList = ref([
 </script>
 
 <style scoped>
+.study-container {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  margin: 30px auto;
+  border-radius: 15px;
+  min-height: 70vh;
+  width: 1135px;
+  align-items: center;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
 .header {
   height: 60px;
   margin-left: 30px;
@@ -75,12 +103,14 @@ const studyList = ref([
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px 20px;
-  padding: 30px;
+  padding: 0 30px;
+  padding-bottom: 30px;
 }
 .card-item {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 330px;
 }
 .title {
   color: #ffffff;

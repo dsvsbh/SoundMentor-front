@@ -16,6 +16,8 @@ export default defineConfig({
   },
   // 解决跨域
   server: {
+    host: '0.0.0.0',
+    port: 5173,
     proxy: {
       '/api': {
         target: 'http://121.43.62.36:8080',
