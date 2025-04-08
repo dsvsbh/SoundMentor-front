@@ -29,7 +29,7 @@
                   ><List
                 /></el-icon>
               </div>
-              <div class="right">
+              <div class="right" @click="practiceWords">
                 <div class="item-title">单词练习</div>
                 <div class="content" style="font-size: 12px; color: #909399">
                   基础发音练习，掌握声调和音节
@@ -42,7 +42,7 @@
                   ><Avatar
                 /></el-icon>
               </div>
-              <div class="right">
+              <div class="right" @click="practiceSpeech">
                 <div class="item-title">演讲练习</div>
                 <div class="content" style="font-size: 12px; color: #909399">
                   长篇演讲练习，锻炼表达能力
@@ -61,6 +61,7 @@
 import { ref } from "vue";
 import Footer from "../headFoot/Footer.vue";
 import { List, Avatar } from "@element-plus/icons-vue";
+import router from "@/router";
 const studyList = ref([
   {
     id: 1,
@@ -75,6 +76,18 @@ const studyList = ref([
     title: "...",
   },
 ]);
+
+const practiceWords = () => {
+  router.push({
+    path: "/study/learn/words",
+  });
+};
+
+const practiceSpeech = () => {
+  router.push({
+    path: "/study/learn/speech",
+  });
+};
 </script>
 
 <style scoped>
@@ -84,7 +97,7 @@ const studyList = ref([
   background-color: white;
   margin: 30px auto;
   border-radius: 15px;
-  min-height: 70vh;
+  min-height: 100vh;
   width: 1135px;
   align-items: center;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
@@ -130,6 +143,7 @@ const studyList = ref([
   background-color: #f5f7fa;
   margin: 15px 15px;
   border-radius: 8px;
+  cursor: pointer;
 }
 .func .right {
   display: flex;

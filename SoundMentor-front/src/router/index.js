@@ -11,8 +11,10 @@ import GroupMembers from '../components/group/GroupMembers.vue'
 import StudyView from '@/views/StudyView.vue'
 import PptEdit from '@/views/PptEdit.vue'
 import PhonicsLearningAids from '@/components/study/PhonicsLearningAids.vue'
+import WordsPractice from '@/components/study/practice/WordsPractice.vue'
 import AudioCommentary from '@/components/study/AudioCommentary.vue'
 import ReadingView from '@/views/ReadingView.vue'
+import SpeechPractice from '@/components/study/practice/SpeechPractice.vue'
 //定义路由关系
 const routes = [
     {
@@ -94,6 +96,22 @@ const routes = [
         component: PhonicsLearningAids,
         meta: {
             title: '语言学习辅助'
+        }
+    },
+    {
+        path: '/study/learn/words',
+        name: 'words',
+        component: WordsPractice,
+        meta: {
+            title: '单词练习'
+        }
+    },
+    {
+        path: '/study/learn/speech',
+        name: 'speech',
+        component: SpeechPractice,
+        meta: {
+            title: '演讲练习'
         }
     },
     {

@@ -16,6 +16,9 @@ export default {
 </script>
 
 <style scoped>
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
 .app {
   background-color: #f5f7fa;
   width: 100%;

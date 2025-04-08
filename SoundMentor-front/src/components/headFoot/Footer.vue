@@ -84,7 +84,7 @@
       </div>
 
       <div class="copyright">
-        <text>© 2024 AI语言合成教学平台 版权所有</text>
+        <text>© 2024 AI语音合成教学平台 版权所有</text>
       </div>
     </div>
   </el-footer>

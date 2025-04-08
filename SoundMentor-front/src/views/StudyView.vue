@@ -117,6 +117,10 @@ const toAudio = () => {
   background-color: #e0f7fa;
   color: #607d8b;
 }
+.card {
+  transition: background-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  cursor: pointer;
+}
 .card-container {
   width: 100%;
   margin-bottom: 60px;
@@ -128,7 +132,6 @@ const toAudio = () => {
   display: flex;
   justify-content: flex-end;
 }
-
 .card:hover {
   background: linear-gradient(to bottom, #e3fdff, #f5fdfd);
 }
