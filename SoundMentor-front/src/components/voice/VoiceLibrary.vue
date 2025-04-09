@@ -2,7 +2,7 @@
   <div class="voice-library">
     <!-- 搜索框 -->
     <div class="search-bar">
-      <!-- TODO -->
+      <!-- TODO 模糊查询-->
       <el-input
         placeholder="搜索音频库"
         prefix-icon="el-icon-search"
@@ -26,75 +26,81 @@
     </el-tabs>
 
     <!-- 音频列表 -->
-
-    <div class="audio-items">
-      <div class="audio-card" v-for="audio in audioList" :key="audio.id">
-        <div class="audio-card-header">
-          <h3>{{ audio.soundName }}</h3>
-          <el-tag color="#79b2ff" effect="dark">
-            <component :is="audio.type" />
-            {{ audio.type === 1 ? "预设" : audio.type === 0 ? "自定义" : "" }}
-          </el-tag>
-        </div>
-        <p v-if="audio.description !== '内容为空'">
-          {{ audio.description }}
-        </p>
-        <el-skeleton style="width: 240px" v-else>
-          <template #template>
-            <el-skeleton-item
-              variant="text"
-              style="
-                margin-right: 16px;
-                width: 300px;
-                height: 18px;
-                margin-top: 20px;
-              "
-            />
-            <el-skeleton-item
-              variant="text"
-              style="width: 30%; height: 18px; margin-bottom: 10px"
-            />
-          </template>
-        </el-skeleton>
-        <el-slider
-          v-model="audio.speed"
-          :max="2"
-          :min="0.5"
-          :step="0.1"
-          @change="updatePlaybackRate"
-        ></el-slider>
-        <div class="action-buttons">
-          <el-button @click="playAudio(audio)" v-if="!audio.isPlaying">
-            <el-icon color="#24a3ff">
-              <VideoPlay />
-            </el-icon>
-            试听
-          </el-button>
-          <el-button @click="pauseAudio(audio)" v-else>
-            <el-icon color="#24a3ff">
-              <VideoPause />
-            </el-icon>
-            暂停
-          </el-button>
-          <el-button @click="downloadAudio(audio.soundUrl)">
-            <el-icon color="#24a3ff"><Download /></el-icon>
-            下载
-          </el-button>
-          <el-button @click="addnewFavorite(audio)" v-if="!audio.isFavorite">
-            <el-icon color="#24a3ff">
-              <Star />
-            </el-icon>
-            收藏
-          </el-button>
-          <el-button @click="delFavorite(audio)" v-else>
-            <el-icon color="#24a3ff">
-              <StarFilled />
-            </el-icon>
-            取消收藏
-          </el-button>
+    <template v-if="isLogin">
+      <div class="audio-items">
+        <div class="audio-card" v-for="audio in audioList" :key="audio.id">
+          <div class="audio-card-header">
+            <h3>{{ audio.soundName }}</h3>
+            <el-tag color="#79b2ff" effect="dark">
+              <component :is="audio.type" />
+              {{ audio.type === 1 ? "预设" : audio.type === 0 ? "自定义" : "" }}
+            </el-tag>
+          </div>
+          <p v-if="audio.description !== '内容为空'">
+            {{ audio.description }}
+          </p>
+          <el-skeleton style="width: 240px" v-else>
+            <template #template>
+              <el-skeleton-item
+                variant="text"
+                style="
+                  margin-right: 16px;
+                  width: 300px;
+                  height: 18px;
+                  margin-top: 20px;
+                "
+              />
+              <el-skeleton-item
+                variant="text"
+                style="width: 30%; height: 18px; margin-bottom: 10px"
+              />
+            </template>
+          </el-skeleton>
+          <el-slider
+            v-model="audio.speed"
+            :max="2"
+            :min="0.5"
+            :step="0.1"
+            @change="updatePlaybackRate"
+          ></el-slider>
+          <div class="action-buttons">
+            <el-button @click="playAudio(audio)" v-if="!audio.isPlaying">
+              <el-icon color="#24a3ff">
+                <VideoPlay />
+              </el-icon>
+              试听
+            </el-button>
+            <el-button @click="pauseAudio(audio)" v-else>
+              <el-icon color="#24a3ff">
+                <VideoPause />
+              </el-icon>
+              暂停
+            </el-button>
+            <el-button @click="downloadAudio(audio.soundUrl)">
+              <el-icon color="#24a3ff"><Download /></el-icon>
+              下载
+            </el-button>
+            <el-button @click="addnewFavorite(audio)" v-if="!audio.isFavorite">
+              <el-icon color="#24a3ff">
+                <Star />
+              </el-icon>
+              收藏
+            </el-button>
+            <el-button @click="delFavorite(audio)" v-else>
+              <el-icon color="#24a3ff">
+                <StarFilled />
+              </el-icon>
+              取消收藏
+            </el-button>
+          </div>
         </div>
       </div>
-    </div>
+    </template>
+    <template v-else>
+      <el-empty>
+        <el-button>去登录/注册</el-button>
+      </el-empty>
+    </template>
 
     <el-pagination
       v-model:current-page="currentPage"
@@ -134,7 +140,7 @@ const currentPage = ref(1);
 const pageSize = ref(6);
 const totalAudioCount = ref(0);
 const audioList = ref([]);
-const userId = userInfo.id;
+const userId = userInfo == null ? 0 : userInfo.id;
 
 const tabs = ref([
   { label: "全部", name: "all", type: 2 },
@@ -154,6 +160,8 @@ const formatFileName = (fileName, maxLength) => {
   // 如果文件名不足 maxLength，则填充到 maxLength 的占位符（用空格填充）
   return fileName.padEnd(maxLength, " ");
 };
+
+const isLogin = ref(false);
 const fetchAudioLibrary = async () => {
   const type = tabs.value.find((tab) => tab.name === activeSubTab.value).type;
   const data = {
@@ -174,6 +182,7 @@ const fetchAudioLibrary = async () => {
       isPlaying: false,
       speed: 1.0, // 默认播放速度为 1.0
     }));
+    isLogin.value = true;
     totalAudioCount.value = response.data.total;
   } catch (error) {
     console.error("Error fetching audio library:", error);

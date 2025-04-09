@@ -1,6 +1,12 @@
 <template>
   <div class="sound-trained-list">
-    <el-button type="danger" @click="deleteSound">批量删除</el-button>
+    <div class="head">
+      <text style="font-size: 22px; font-weight: bold; color: #5d5d5d"
+        >文本朗读</text
+      >
+      <el-button type="danger" @click="deleteSound">批量删除</el-button>
+    </div>
+
     <el-dialog v-model="isDelete" title="音频删除" width="25%">
       <div style="marign">
         <p>确定要删除音频吗？</p>
@@ -199,9 +205,20 @@ const confirmDelete = async () => {
   margin-bottom: 30px;
   border-radius: 0 0 10px 10px;
   padding: 20px;
-  align-items: center;
+}
+.head {
+  margin: 20px;
+  display: flex;
+  justify-content: space-between;
+  height: 50px;
+  border-bottom: 1px solid #dcdfe6;
+}
+.sound-tb {
+  min-height: 28vh;
 }
 .el-pagination {
   margin-top: 30px;
+  justify-content: center;
+  align-items: end;
 }
 </style>
