@@ -15,11 +15,11 @@
         placeholder="搜索文件"
         style="width: 300px; margin-bottom: 10px; margin-left: 320px"
         v-model="userSearchTerm"
-        @input="fetchUserFiles"
         :disabled="loading"
+        @keydown.enter="handleSearch"
       >
         <template #prepend>
-          <el-button :icon="Search" />
+          <el-button :icon="Search" @click="handleSearch" />
         </template>
       </el-input>
       <div class="user-file-list">
@@ -77,6 +77,7 @@ const isUploadVisible = ref(false);
 const userButtonList = ref(["全部", "音频", "文档", "图片", "PPT"]);
 const userActiveButton = ref("全部");
 const userSearchTerm = ref("");
+const searchQuery = ref("");
 const userFiles = ref([]);
 const userCurrentPage = ref(1);
 const userPageSize = ref(5);
@@ -127,7 +128,7 @@ const setUserActiveButton = (button) => {
 const fetchUserFiles = async () => {
   const userPageDTO = {
     fileTypes: getSelectedFileTypes(),
-    fileName: userSearchTerm.value,
+    fileName: searchQuery.value,
     pageNum: userCurrentPage.value,
     pageSize: userPageSize.value,
   };
@@ -163,11 +164,15 @@ const changeUserPage = (newPage) => {
 };
 
 // 监听文件类型和搜索条件的变化
-watch([userSelectedFileTypes, userSearchTerm], () => {
+watch([userSelectedFileTypes], () => {
   userCurrentPage.value = 1; // 重置为第一页
   fetchUserFiles(); // 重新获取文件
 });
-
+const handleSearch = () => {
+  searchQuery.value = userSearchTerm.value;
+  currentPage.value = 1;
+  fetchUserFiles();
+};
 // 初始加载
 fetchUserFiles();
 

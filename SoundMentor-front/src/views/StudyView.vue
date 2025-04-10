@@ -37,10 +37,10 @@ import Footer from "@/components/headFoot/Footer.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 const img1 = ref(
-  "http://121.43.62.36:9000/img/1738919216493_942a17a390f5518264b4adb06a3c673e.png"
+  "http://8.148.229.137:9000/img/1738919216493_942a17a390f5518264b4adb06a3c673e.png"
 );
 const img2 = ref(
-  "http://121.43.62.36:9000/img/1738919188800_5faa22597c686cc150b32663f179a9e1.png"
+  "http://8.148.229.137:9000/img/1738919188800_5faa22597c686cc150b32663f179a9e1.png"
 );
 const router = useRouter();
 const toLearn = () => {

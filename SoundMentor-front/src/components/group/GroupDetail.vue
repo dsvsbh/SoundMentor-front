@@ -94,8 +94,13 @@
             placeholder="搜索文件"
             style="width: 200px; height: 33px"
             v-model="searchQuery"
-            ><template #prepend> <el-button :icon="Search" /> </template
-          ></el-input>
+            @keydown.enter="handleSearch"
+          >
+            <template #prepend>
+              <el-button :icon="Search" @click="handleSearch" />
+            </template>
+          </el-input>
+
           <el-button
             type="primary"
             :icon="UploadFilled"
@@ -117,7 +122,7 @@
           </div>
         </template>
         <div class="file-item" v-for="file in paginatedFiles" :key="file.id">
-          <img src="" alt="" class="ppt-first-page" />
+          <img :src="file.filePath" alt="" class="ppt-first-page" />
           <!-- 文件展示 -->
 
           <div class="info">
@@ -268,26 +273,33 @@ const activeStyle = {
   backgroundColor: "#409EFF",
   color: "#fff",
 };
-const itemsPerPage = ref(6); // 每页显示的文件条数
-const currentPage = ref(1); // 当前页面
-const searchQuery = ref(""); // 搜索查询内容
-const files = ref([]); // 用于存储从API获取的文件记录
-const totalPages = ref(0); // 存储总页数
+const itemsPerPage = ref(6);
+const currentPage = ref(1);
+const searchQuery = ref("");
+const files = ref([]);
+const totalPages = ref(0);
 
 // 在组件挂载时获取组员信息并初始化文件
 onMounted(async () => {
-  members.value = await getOrganizationMemberListService(organizationId.value); // 获取组员列表
-  getCurrentRole(); // 获取当前用户角色
-  fetchFiles(); // 初始获取文件
+  members.value = await getOrganizationMemberListService(organizationId.value);
+  getCurrentRole();
+  fetchFiles();
 });
 // 文件名格式化函数
 const formatFileName = (fileName) => {
   const maxLength = 10; // 最大长度
   return fileName && fileName.length > maxLength
     ? `${fileName.slice(0, maxLength)}...`
-    : fileName || "未知文件"; // 处理undefined
+    : fileName || "未知文件";
 };
 
+// 处理搜索按钮点击事件
+const searchTerm = ref("");
+const handleSearch = () => {
+  searchTerm.value = searchQuery.value;
+  currentPage.value = 1;
+  fetchFiles();
+};
 // 根据当前筛选条件和分页请求文件
 const fetchFiles = async () => {
   const orgId = parseInt(organizationId.value, 10);
@@ -362,7 +374,7 @@ const getSelectedFileTypes = () => {
 };
 
 // 监听搜索框、激活按钮和当前页码的变化，重新获取文件
-watch([searchQuery, activeButton, currentPage], fetchFiles);
+watch([activeButton, currentPage], fetchFiles);
 
 // 计算当前页面显示的文件
 const paginatedFiles = computed(() => {
@@ -403,11 +415,6 @@ const prevPage = () => {
     currentPage.value -= 1;
   }
 };
-
-// 监听搜索查询变化，重置页码到第一页
-watch(searchQuery, () => {
-  currentPage.value = 1;
-});
 
 // 监听活动按钮变化，重置页码到第一页
 watch(activeButton, () => {

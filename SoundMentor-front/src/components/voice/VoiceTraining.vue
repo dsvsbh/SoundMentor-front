@@ -9,7 +9,6 @@
     <el-steps :active="activeStep" finish-status="success" class="step-bar">
       <el-step title="采集声音" description="上传或录制声音" />
       <el-step title="AI训练" description="训练模型" />
-      <el-step title="声音微调" description="调整参数" />
       <el-step title="完成" description="添加到样本库" />
     </el-steps>
     <div class="voice-training">
@@ -62,25 +61,29 @@
       >
       <!-- TODO -->
       <el-dialog v-model="inputSoundName" title="输入音频名称" width="30%">
-        <el-input v-model="soundName" label="音频名称"></el-input>
-        <el-input v-model="soundDescription" label="音频描述"></el-input>
+        <el-input
+          v-model="soundName"
+          label="音频名称"
+          placeholder="请输入名称"
+        ></el-input>
+        <el-input
+          v-model="soundDescription"
+          label="音频描述"
+          placeholder="请输入描述"
+        ></el-input>
         <div style="margin-top: 20px; padding: 0 140px">
           <el-button type="primary" @click="startTraining">确认</el-button>
           <el-button>取消</el-button>
         </div>
       </el-dialog>
     </div>
-
-    <!-- TODO -->
     <div style="margin: 20px auto">
       <el-button
         type="primary"
-        @click="adjustParameters"
-        :disabled="activeStep != 2"
+        @click="saveVoice"
+        :disabled="activeStep != 2 && !isComplete"
+        style="width: 200px; height: 50px"
       >
-        调整参数
-      </el-button>
-      <el-button type="primary" @click="saveVoice" :disabled="activeStep != 3">
         保存
       </el-button>
     </div>
@@ -229,18 +232,15 @@ const startTraining = async () => {
     ElMessage.error(err.message);
   }
 };
-// 调整参数
-const adjustParameters = () => {
-  // 在这里处理参数调整逻辑...
-  ElMessage.success("参数调整完成！");
-  activeStep.value = 3; // 进入步骤 3
-};
+
 // 保存音频
+const isComplete = ref(false);
 const saveVoice = () => {
-  activeStep.value = 4; // 完成
+  activeStep.value = 3; // 完成
+  isComplete.value = true;
+  ElMessage.success("保存成功");
 };
 // 进行长轮询
-let intervalId;
 onMounted(() => {
   const id = localStorage.getItem("taskId");
   if (id !== null) {
@@ -286,7 +286,7 @@ const handleClose = () => {
 .step-bar {
   width: auto;
   max-width: 1000px;
-  margin: 20px 80px;
+  margin: 20px 100px;
 }
 .training-box {
   margin: 0 140px;

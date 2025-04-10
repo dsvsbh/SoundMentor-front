@@ -1,7 +1,12 @@
 <template>
   <div class="ppt-container">
     <div class="ppt-box">
-      <div class="title">编辑讲解文本</div>
+      <div class="title">
+        <div>编辑讲解文本</div>
+        <el-button type="primary" @click="download" :disabled="!isComplete"
+          >下载有声PPT</el-button
+        >
+      </div>
       <div class="edit-ppt">
         <div class="center">
           <div class="sider">
@@ -26,6 +31,8 @@
               class="explain"
               v-if="currentPage"
               v-model="currentPage.summary"
+              @input="handleSummaryChange"
+              placeholder="请在此输入幻灯片讲解文本"
             />
 
             <div class="audio" v-if="currentPage">
@@ -39,8 +46,14 @@
               </div>
               <audio :src="currentPage.soundUrl" controls></audio>
               <div class="right">
-                <text>替换语音</text>
-                <text style="margin-left: 20px">下载</text>
+                <text style="cursor: pointer" @click="replaceAudio"
+                  >替换语音</text
+                >
+                <text
+                  style="margin-left: 20px; cursor: pointer"
+                  @click="downloadAudio"
+                  >下载</text
+                >
               </div>
             </div>
           </div>
@@ -58,9 +71,10 @@
 </template>
   
   <script setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref } from "vue";
 import Footer from "@/components/headFoot/Footer.vue";
-import { getPptTask } from "@/api/task";
+import { getPptTask, getPptResult, updatePPT } from "@/api/task";
+import { uploadFileService } from "@/api/file";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import router from "@/router";
@@ -133,9 +147,99 @@ const startPolling = async () => {
   }, intervalTime);
 };
 const backUpload = async () => {
-  router.back({
-    path: "/ppt",
-  });
+  router.back();
+};
+
+// 下载有声ppt
+const download = async () => {
+  try {
+    const res = await getPptResult(taskId.value);
+    console.log(res);
+    window.open(res, "_blank");
+
+    ElMessage.success("下载成功");
+  } catch (err) {
+    ElMessage.error(err.message);
+  }
+};
+const generateAudio = async () => {
+  try {
+    if (currentPage.value) {
+      const index = uploadPPTfile.value.findIndex(
+        (page) => page.pptPage === currentPage.value.pptPage
+      );
+      if (index !== -1) {
+        uploadPPTfile.value[index] = { ...currentPage.value };
+      }
+    }
+
+    // 调用API更新PPT数据
+    await updatePPT(uploadPPTfile.value);
+    ElMessage.info("语音生成请求已提交，请稍候");
+
+    // 重新开始轮询以获取更新的结果
+    isComplete.value = false;
+    startPolling();
+  } catch (error) {
+    console.error("生成语音失败:", error);
+    ElMessage.error("生成语音失败，请重试");
+  }
+};
+// 监听文本框内容变化
+const handleSummaryChange = () => {
+  if (currentPage.value) {
+    const index = uploadPPTfile.value.findIndex(
+      (page) => page.pptPage === currentPage.value.pptPage
+    );
+    if (index !== -1) {
+      uploadPPTfile.value[index].summary = currentPage.value.summary;
+    }
+  }
+};
+// 替换当前幻灯片的音频
+const replaceAudio = () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "audio/mp3";
+
+  input.onchange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.includes("audio/mp3") && !file.type.includes("audio/mpeg")) {
+      ElMessage.error("请上传MP3格式的音频文件");
+      return;
+    }
+
+    try {
+      ElMessage.info("正在上传音频，请稍候...");
+
+      // 使用全局上传文件接口
+      const response = await uploadFileService(file);
+
+      if (!response || !response.data || !response.data.fileUrl) {
+        throw new Error("上传失败或返回格式不正确");
+      }
+
+      // 更新当前页面的音频URL
+      currentPage.value.soundUrl = response.data.fileUrl;
+
+      // 更新uploadPPTfile数组中的页面
+      const index = uploadPPTfile.value.findIndex(
+        (page) => page.pptPage === currentPage.value.pptPage
+      );
+      if (index !== -1) {
+        uploadPPTfile.value[index] = { ...currentPage.value };
+      }
+      await updatePPT(uploadPPTfile.value);
+      ElMessage.success("音频替换成功");
+    } catch (error) {
+      console.error("音频上传失败:", error);
+      ElMessage.error("音频上传失败，请重试");
+    }
+  };
+
+  input.click();
 };
 </script>  
   
@@ -154,6 +258,9 @@ const backUpload = async () => {
   font-weight: bold;
   padding: 20px;
   border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 .ppt-box {
   margin: 30px 0;
@@ -174,7 +281,7 @@ const backUpload = async () => {
 .sider {
   height: 540px;
   flex: 1;
-  background-color: #f9f9f9;
+  background-color: #ededed81;
   border-radius: 5px;
   overflow-y: auto;
 }
@@ -184,7 +291,7 @@ const backUpload = async () => {
   margin: 10px 8px;
   padding: 8px 10px;
   background-color: #fff;
-  border: #e9e9e9;
+  border: 1px solid #e9e9e9;
   border-width: 1px;
   border-radius: 5px;
 }
@@ -220,6 +327,11 @@ const backUpload = async () => {
 .explain {
   flex: 0.7;
   border-radius: 5px;
+  resize: none;
+  border: 1px solid #d9d9d9;
+}
+.explain :focus {
+  border: 1px solid #d9d9d9;
 }
 .audio {
   flex: 0.3;
@@ -240,6 +352,9 @@ const backUpload = async () => {
   padding-left: 150px;
   color: #409eff;
   font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 .btns {
   float: right;

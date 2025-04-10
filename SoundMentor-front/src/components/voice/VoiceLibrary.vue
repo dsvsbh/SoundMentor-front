@@ -2,15 +2,14 @@
   <div class="voice-library">
     <!-- 搜索框 -->
     <div class="search-bar">
-      <!-- TODO 模糊查询-->
       <el-input
         placeholder="搜索音频库"
         prefix-icon="el-icon-search"
         v-model="searchQuery"
-        @keyup.enter="fetchAudioLibrary"
+        @keyup.enter="handleSearch"
       >
         <template #prepend>
-          <el-button :icon="Search" />
+          <el-button :icon="Search" @click="handleSearch" />
         </template>
       </el-input>
     </div>
@@ -188,8 +187,13 @@ const fetchAudioLibrary = async () => {
     console.error("Error fetching audio library:", error);
   }
 };
-
-watch([activeSubTab, searchQuery, currentPage], fetchAudioLibrary, {
+const searchTerm = ref("");
+const handleSearch = () => {
+  searchTerm.value = searchQuery.value;
+  currentPage.value = 1;
+  fetchAudioLibrary();
+};
+watch([activeSubTab, currentPage], fetchAudioLibrary, {
   immediate: true,
 });
 const handleCurrentChange = (page) => {

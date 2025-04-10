@@ -174,6 +174,7 @@
               placeholder="搜索文件"
               v-model="userSearchTerm"
               :disabled="loading"
+              @keydown.enter="searchItem"
             >
               <template #append>
                 <el-button :icon="Search" @click="searchItem" />
@@ -426,7 +427,7 @@ const userSearchTerm = ref("");
 const fetchUserFiles = async () => {
   const userPageDTO = {
     fileTypes: getSelectedFileTypes(),
-    fileName: userSearchTerm.value,
+    fileName: searchQuery.value,
     pageNum: userCurrentPage.value,
     pageSize: userPageSize.value,
   };
@@ -455,9 +456,10 @@ const fetchUserFiles = async () => {
     loading.value = false; // 结束加载
   }
 };
-
+const searchQuery = ref("");
 // 点击搜索图标时调用搜索函数
 const searchItem = () => {
+  searchQuery.value = userSearchTerm.value;
   userCurrentPage.value = 1; // 重置为第一页
   fetchUserFiles(); // 调用获取文件的函数
 };

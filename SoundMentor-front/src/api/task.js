@@ -31,7 +31,7 @@ export const getTaskDetailById = async (taskId) => {
         const res = await request.get(`/task/getTaskById/${taskId}`, {
             headers: { Authorization: token },
         });
-        if (res.code == 0) {
+        if (res.code === "0") {
             return res;
         }
         else {
@@ -63,3 +63,43 @@ export const getPptTask = async (userPptId) => {
     }
 }
 
+// 修改有声ppt结果
+export const updatePPT = async (form) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("认证失败！");
+        }
+        const res = await request.put('/task/updatePPTResult', form, {
+            headers: {
+                Authorization: token,
+                'Content-Type': 'application/json'
+            }
+        })
+        return res;
+    }
+
+    catch (err) {
+        console.log("修改有声ppt结果出错！", err.message);
+    }
+}
+
+export const getPptResult = async (pptId) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("认证失败！");
+        }
+        const res = await request.get(`/task/getppt/${pptId}`, {
+            headers: { Authorization: token },
+        });
+        if (res.code === "0") {
+            return res.data;
+        }
+        else {
+            console.log(res.message);
+        }
+    } catch (err) {
+        console.log("获取任务详情出错！", err.message);
+    }
+}
