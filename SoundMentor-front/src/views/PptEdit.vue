@@ -45,6 +45,20 @@
                 </text>
               </div>
               <audio :src="currentPage.soundUrl" controls></audio>
+              <el-select
+                v-model="language"
+                placeholder="请选择语言"
+                style="width: 130px"
+                :disabled="generating"
+                @change="handleLanguageChange"
+              >
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
               <div class="right">
                 <text style="cursor: pointer" @click="replaceAudio"
                   >替换语音</text
@@ -58,7 +72,6 @@
             </div>
           </div>
         </div>
-        <!-- TODO -->
         <div class="btns">
           <el-button type="default" @click="backUpload">返回</el-button>
           <el-button type="primary" @click="generateAudio">生成语音</el-button>
@@ -73,11 +86,17 @@
   <script setup>
 import { onMounted, ref } from "vue";
 import Footer from "@/components/headFoot/Footer.vue";
-import { getPptTask, getPptResult, updatePPT } from "@/api/task";
+import {
+  getPptTask,
+  getPptResult,
+  updatePPT,
+  taskExecutionService,
+} from "@/api/task";
 import { uploadFileService } from "@/api/file";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import router from "@/router";
+import { fetchAllAudioLibraries } from "@/utils/VoiceList";
 
 const route = useRoute();
 const uploadPPTfile = ref([]);
@@ -162,19 +181,38 @@ const download = async () => {
     ElMessage.error(err.message);
   }
 };
+// 从本地存储加载音频库选项
+const handleOption = () => {
+  const audioListJson = localStorage.getItem("audioList");
+  if (audioListJson) {
+    const audioList = JSON.parse(audioListJson);
+    audioList.forEach((item) => {
+      options.push({
+        value: item.id,
+        label: item.soundName,
+      });
+    });
+  }
+};
+const options = []; // 语言选择列表
+const language = ref(""); // 当前选择的语言
+const isSelect = ref(false); // 是否选择了音频库
+// 处理语言选择
+const handleLanguageChange = (value) => {
+  language.value = value;
+  isSelect.value = true;
+};
+// 生成语音
 const generateAudio = async () => {
   try {
-    if (currentPage.value) {
-      const index = uploadPPTfile.value.findIndex(
-        (page) => page.pptPage === currentPage.value.pptPage
-      );
-      if (index !== -1) {
-        uploadPPTfile.value[index] = { ...currentPage.value };
-      }
-    }
-
-    // 调用API更新PPT数据
-    await updatePPT(uploadPPTfile.value);
+    const form = {
+      type: "PPT_SUMMARY_VOICE",
+      taskType: "PPT_SUMMARY_VOICE",
+      userPptId: taskId.value,
+      userSoundId: language.value,
+      rate: 100,
+    };
+    const res = await taskExecutionService(form);
     ElMessage.info("语音生成请求已提交，请稍候");
 
     // 重新开始轮询以获取更新的结果
@@ -241,6 +279,11 @@ const replaceAudio = () => {
 
   input.click();
 };
+
+onMounted(() => {
+  fetchAllAudioLibraries();
+  handleOption();
+});
 </script>  
   
 <style scoped>
@@ -340,6 +383,7 @@ const replaceAudio = () => {
   padding: 10px;
   background-color: #f2f2f2;
   border-radius: 5px;
+  align-items: center;
 }
 .audio .left {
   flex: 4.5;
@@ -349,7 +393,7 @@ const replaceAudio = () => {
 .audio .right {
   flex: 1;
   padding-top: 10px;
-  padding-left: 150px;
+  padding-left: 100px;
   color: #409eff;
   font-size: 14px;
   display: flex;

@@ -6,22 +6,28 @@
         <text style="font-size: 22px; font-weight: bold; color: #5d5d5d"
           >文本朗读</text
         >
-        <el-button type="primary">生成语音</el-button>
+        <el-button
+          type="primary"
+          :disabled="text.length === 0 || generating || !isSelect"
+          @click="audioPreview"
+          >音频试听</el-button
+        >
       </div>
       <el-divider />
       <el-input
-        placeholder="请输入或粘贴教学内容（800-2000字）"
+        placeholder="请输入或粘贴教学内容（1-2000字）"
         v-model="text"
         type="textarea"
         :autosize="{ minRows: 16, maxRows: 16 }"
         style="width: 93%; margin: 0 25px"
         resize="none"
+        :disabled="generating"
       />
       <div
         class="words"
         style="color: #cccccc; font-size: 14px; margin: 15px 25px"
       >
-        当前字数： / 2000
+        当前字数：{{ text.length }} / 2000
       </div>
     </div>
     <div class="right-box">
@@ -30,7 +36,13 @@
         <div style="font-size: 18px">基础设置</div>
       </div>
       <p style="color: #606266">语言选择</p>
-      <el-select v-model="value" placeholder="请选择语言" style="width: 200px">
+      <el-select
+        v-model="language"
+        placeholder="请选择语言"
+        style="width: 200px"
+        :disabled="generating"
+        @change="handleLanguageChange"
+      >
         <el-option
           v-for="item in options"
           :key="item.value"
@@ -39,12 +51,13 @@
         />
       </el-select>
       <p style="color: #606266">语速调节</p>
-      <el-button-group class="btns">
-        <el-button>慢速</el-button>
-        <el-button>正常</el-button>
-        <el-button>快速</el-button>
-      </el-button-group>
-      <el-slider :max="2" :min="0.5" :step="0.1" v-model="speed"></el-slider>
+      <el-slider
+        :max="2"
+        :min="0.5"
+        :step="0.1"
+        v-model="speed"
+        :disabled="generating"
+      ></el-slider>
       <el-divider />
       <div class="title">
         <el-icon size="20"><Headset /></el-icon>
@@ -52,9 +65,21 @@
       </div>
       <div class="audio-control">
         <el-button-group class="btns">
-          <el-button>-15s</el-button>
-          <el-button :icon="VideoPlay">播放</el-button>
-          <el-button>+15s</el-button>
+          <el-button @click="audioControl(-15)">-15s</el-button>
+          <el-button
+            @click="playAudio"
+            :disabled="!audioUrl"
+            :icon="VideoPlay"
+            v-if="!isPlaying"
+            >试听</el-button
+          >
+          <el-button @click="pauseAudio" v-else>
+            <el-icon color="#24a3ff">
+              <VideoPause />
+            </el-icon>
+            暂停
+          </el-button>
+          <el-button @click="audioControl(15)">+15s</el-button>
         </el-button-group>
         <el-slider
           :max="100"
@@ -62,9 +87,16 @@
           :step="1"
           v-model="audioProgress"
           style="width: 60px"
+          :disabled="!audioUrl"
         ></el-slider>
       </div>
-      <el-button type="primary" style="width: 100%">生成语音</el-button>
+      <el-button
+        type="primary"
+        style="width: 100%"
+        :disabled="text.length === 0 || generating"
+        @click="generateAudio"
+        >生成语音</el-button
+      >
     </div>
   </div>
   <!-- 生成记录 -->
@@ -79,36 +111,41 @@
       <el-button type="primary">批量下载</el-button>
     </div>
     <div class="list">
-      <div class="item" v-for="(item, index) in paginatedItems" :key="index">
-        <div class="left-info">
-          <el-checkbox v-model="item.checked" size="large" />
-          <div class="ico">
-            <el-icon size="30" color="#ffffff"><Document /></el-icon>
+      <template v-if="audioList.length > 0">
+        <div class="item" v-for="(item, index) in paginatedItems" :key="index">
+          <div class="left-info">
+            <el-checkbox v-model="item.checked" size="large" />
+            <div class="ico">
+              <el-icon size="30" color="#ffffff"><Document /></el-icon>
+            </div>
+            <div class="info">
+              <span style="font-size: 18px; font-weight: bold">{{
+                item.name
+              }}</span>
+              <div style="display: flex; gap: 10px; color: #c0c4cc">
+                <span>{{ item.date }}</span>
+                <span>{{ item.format }}</span>
+                <span>{{ item.duration }}</span>
+              </div>
+            </div>
           </div>
-          <div class="info">
-            <span style="font-size: 18px; font-weight: bold">{{
-              item.name
-            }}</span>
-            <div style="display: flex; gap: 10px; color: #c0c4cc">
-              <span>{{ item.date }}</span>
-              <span>{{ item.format }}</span>
-              <span>{{ item.duration }}</span>
+          <div class="right-btn">
+            <audio :src="item.audioSrc" controls></audio>
+            <div style="display: flex; gap: 30px">
+              <el-link type="primary" href="" :underline="false">
+                <el-icon><Download /></el-icon>下载
+              </el-link>
+              <!-- TODO 删除音频 -->
+              <el-link type="primary" href="" :underline="false">
+                <el-icon><Delete /></el-icon>删除
+              </el-link>
             </div>
           </div>
         </div>
-        <div class="right-btn">
-          <audio :src="item.audioSrc" controls></audio>
-          <div style="display: flex; gap: 30px">
-            <el-link type="primary" href="" :underline="false">
-              <el-icon><Download /></el-icon>下载
-            </el-link>
-            <el-link type="primary" href="" :underline="false">
-              <!-- TODO 删除音频 -->
-              <el-icon><Delete /></el-icon>删除
-            </el-link>
-          </div>
-        </div>
-      </div>
+      </template>
+      <template v-else>
+        <el-empty description="暂无生成记录"></el-empty>
+      </template>
     </div>
 
     <div class="page">
@@ -131,39 +168,120 @@ import {
   Operation,
   Headset,
   VideoPlay,
-  Delete,
-  Download,
-  Document,
+  VideoPause,
 } from "@element-plus/icons-vue";
-import { ref, computed } from "vue";
-import { ElCheckbox, ElLink, ElIcon, ElPagination } from "element-plus";
+import { ref, computed, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import { taskExecutionService, getTaskDetailById } from "@/api/task";
+import { fetchAllAudioLibraries } from "@/utils/VoiceList";
 
-const options = [
-  {
-    value: "Option1",
-    label: "Option1",
-  },
-  {
-    value: "Option2",
-    label: "Option2",
-  },
-  {
-    value: "Option3",
-    label: "Option3",
-  },
-  {
-    value: "Option4",
-    label: "Option4",
-  },
-  {
-    value: "Option5",
-    label: "Option5",
-  },
-];
+const text = ref(""); // 用户输入文本
+const options = []; // 语言选择列表
+const language = ref(""); // 当前选择的语言
+const speed = ref(1); // 语速
+const audioProgress = ref(0); // 音频进度
+const audioUrl = ref(null); // 音频的URL
+const audioElement = ref(new Audio()); // 音频播放元素
+const generating = ref(false); // 是否正在生成音频
+const taskId = ref(null); // 当前任务的ID
+const isSelect = ref(false); // 是否选择了音频库
 
-const speed = ref(1);
-const audioProgress = ref(1);
+// 从本地存储加载音频库选项
+const handleOption = () => {
+  const audioListJson = localStorage.getItem("audioList");
+  if (audioListJson) {
+    const audioList = JSON.parse(audioListJson);
+    audioList.forEach((item) => {
+      options.push({
+        value: item.id,
+        label: item.soundName,
+      });
+    });
+  }
+};
 
+const isPlaying = ref(false);
+// 播放音频
+const playAudio = () => {
+  if (audioUrl.value) {
+    isPlaying.value = true;
+    audioElement.value.pause();
+    audioElement.value.src = audioUrl.value;
+    audioElement.value.playbackRate = speed.value; // 设置播放速度
+    audioElement.value.play();
+  }
+};
+
+// 暂停音频
+const pauseAudio = () => {
+  audioElement.value.pause();
+  isPlaying.value = false;
+};
+
+// 调整音频播放进度
+const audioControl = (seconds) => {
+  if (audioElement.value) {
+    audioElement.value.currentTime += seconds;
+  }
+};
+
+// 音频生成后跳转到新页面播放音频
+const generateAudio = () => {
+  if (audioUrl.value) {
+    window.open(audioUrl.value, "_blank"); // 在新标签页打开音频
+  }
+};
+
+// 处理语言选择
+const handleLanguageChange = (value) => {
+  language.value = value;
+  isSelect.value = true;
+};
+
+// 创建音频合成任务并开始轮询
+const audioPreview = async () => {
+  if (text.value.trim() === "") return;
+
+  const requestData = {
+    type: "NORMAL_TTS",
+    taskType: "NORMAL_TTS",
+    content: text.value,
+    userSoundId: language.value,
+    rate: speed.value * 100,
+  };
+
+  generating.value = true;
+  ElMessage({ message: "生成中...", type: "info" });
+
+  try {
+    const res = await taskExecutionService(requestData);
+    if (res && res.data && res.data.id) {
+      taskId.value = res.data.id;
+      pollTaskStatus();
+    }
+  } catch (err) {
+    console.error("创建任务失败", err);
+    generating.value = false;
+  }
+};
+
+// 每3秒查询一次任务状态
+const pollTaskStatus = () => {
+  const intervalId = setInterval(async () => {
+    const res = await getTaskDetailById(taskId.value);
+    if (res && res.data) {
+      const messageBody = JSON.parse(res.data.messageBody);
+      if (messageBody.status === 1) {
+        audioUrl.value = messageBody.soundUrl; // 获取音频URL
+        clearInterval(intervalId); // 停止轮询
+        ElMessage.success("音频生成完成");
+        generating.value = false;
+      }
+    }
+  }, 3000); // 每3秒查询一次
+};
+
+// 分页功能
 const audioList = [
   {
     name: "示例文本1.mp3",
@@ -189,62 +307,7 @@ const audioList = [
     audioSrc: "/audio/example3.mp3",
     checked: false,
   },
-  {
-    name: "示例文本4.mp3",
-    date: "2025.4.4",
-    format: "MP3",
-    duration: "5:10",
-    audioSrc: "/audio/example4.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本5.mp3",
-    date: "2025.4.5",
-    format: "MP3",
-    duration: "3:50",
-    audioSrc: "/audio/example5.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本6.mp3",
-    date: "2025.4.6",
-    format: "MP3",
-    duration: "4:20",
-    audioSrc: "/audio/example6.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本7.mp3",
-    date: "2025.4.7",
-    format: "MP3",
-    duration: "2:45",
-    audioSrc: "/audio/example7.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本8.mp3",
-    date: "2025.4.8",
-    format: "MP3",
-    duration: "3:30",
-    audioSrc: "/audio/example8.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本9.mp3",
-    date: "2025.4.9",
-    format: "MP3",
-    duration: "4:05",
-    audioSrc: "/audio/example9.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本10.mp3",
-    date: "2025.4.10",
-    format: "MP3",
-    duration: "5:15",
-    audioSrc: "/audio/example10.mp3",
-    checked: false,
-  },
+  // 其他示例音频
 ];
 const currentPage = ref(1);
 const pageSize = ref(5);
@@ -258,7 +321,13 @@ const paginatedItems = computed(() => {
 const handlePageChange = (newPage) => {
   currentPage.value = newPage;
 };
+
+onMounted(() => {
+  fetchAllAudioLibraries();
+  handleOption();
+});
 </script>
+
 <style scoped>
 .up-box {
   display: flex;

@@ -59,12 +59,12 @@
         :disabled="uploadedFiles.length == 0"
         >开始训练</el-button
       >
-      <!-- TODO -->
       <el-dialog v-model="inputSoundName" title="输入音频名称" width="30%">
         <el-input
           v-model="soundName"
           label="音频名称"
           placeholder="请输入名称"
+          style="margin-bottom: 20px"
         ></el-input>
         <el-input
           v-model="soundDescription"

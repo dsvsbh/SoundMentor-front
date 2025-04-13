@@ -4,7 +4,6 @@
       <div class="back-up" @click="back">
         <el-icon><ArrowLeft /></el-icon>返回语音选择
       </div>
-      <!-- TODO 语言埋点 -->
       <div class="title">
         <span>{{ language === "english" ? "英文" : "中文" }} - 朗诵练习</span>
         <div class="bar"></div>

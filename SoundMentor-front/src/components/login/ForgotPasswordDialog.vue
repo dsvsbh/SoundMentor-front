@@ -64,152 +64,145 @@
   </el-dialog>
 </template>
   
-  <script>
+<script setup>
 import { ref, reactive } from "vue";
 import { ElMessage } from "element-plus";
 import request from "@/utils/request";
+import { updateUserPasswordService } from "@/api/user";
 
-export default {
-  name: "ForgotPasswordDialog",
-  setup() {
-    const visible = ref(false);
-    const forgotFormRef = ref(null);
-    const countDown = ref(0);
-    const isCountingDown = ref(false);
-    const handleForgotPassword = () => {
-      visible.value = true;
-    };
+// 变量声明
+const visible = ref(false);
+const forgotFormRef = ref(null);
+const countDown = ref(0);
+const isCountingDown = ref(false);
+const countDownText = ref("获取验证码");
 
-    const forgotForm = reactive({
-      email: "",
-      code: "",
-      phone: "",
-      password: "",
-      confirmPassword: "",
+// 表单数据
+const forgotForm = reactive({
+  email: "",
+  code: "",
+  phone: "",
+  password: "",
+  confirmPassword: "",
+});
+
+// 表单验证规则
+const rules = {
+  email: [
+    { required: true, message: "请输入邮箱", trigger: "blur" },
+    { type: "email", message: "请输入正确的邮箱格式", trigger: "blur" },
+  ],
+  code: [
+    { required: true, message: "请输入验证码", trigger: "blur" },
+    { len: 6, message: "验证码长度必须为6位", trigger: "blur" },
+  ],
+  phone: [
+    { required: true, message: "请输入手机号", trigger: "blur" },
+    {
+      pattern: /^1[3-9]\d{9}$/,
+      message: "请输入正确的手机号格式",
+      trigger: "blur",
+    },
+  ],
+  password: [
+    { required: true, message: "请输入新密码", trigger: "blur" },
+    {
+      min: 6,
+      max: 16,
+      message: "密码长度必须在6-16位之间",
+      trigger: "blur",
+    },
+  ],
+  confirmPassword: [
+    { required: true, message: "请确认新密码", trigger: "blur" },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== forgotForm.password) {
+          callback(new Error("两次输入的密码不一致"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur",
+    },
+  ],
+};
+
+// 处理忘记密码弹窗
+const handleForgotPassword = () => {
+  visible.value = true;
+};
+
+// 启动倒计时
+const startCountDown = () => {
+  isCountingDown.value = true;
+  countDown.value = 60;
+  const timer = setInterval(() => {
+    countDown.value--;
+    countDownText.value = `${countDown.value}秒后重试`;
+    if (countDown.value <= 0) {
+      clearInterval(timer);
+      isCountingDown.value = false;
+      countDownText.value = "获取验证码";
+    }
+  }, 1000);
+};
+
+// 获取验证码
+const getVerificationCode = async () => {
+  if (!forgotForm.email || !forgotForm.phone) {
+    ElMessage.warning("请先完整填写邮箱和手机号");
+    return;
+  }
+
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(forgotForm.email)) {
+    ElMessage.warning("请输入正确的邮箱格式");
+    return;
+  }
+
+  // 验证手机号格式
+  const phoneRegex = /^1[3-9]\d{9}$/;
+  if (!phoneRegex.test(forgotForm.phone)) {
+    ElMessage.warning("请输入正确的手机号格式");
+    return;
+  }
+
+  try {
+    await request({
+      url: "/user/sendEmail",
+      method: "post",
+      data: {
+        email: forgotForm.email,
+      },
     });
 
-    const rules = {
-      email: [
-        { required: true, message: "请输入邮箱", trigger: "blur" },
-        { type: "email", message: "请输入正确的邮箱格式", trigger: "blur" },
-      ],
-      code: [
-        { required: true, message: "请输入验证码", trigger: "blur" },
-        { len: 6, message: "验证码长度必须为6位", trigger: "blur" },
-      ],
-      phone: [
-        { required: true, message: "请输入手机号", trigger: "blur" },
-        {
-          pattern: /^1[3-9]\d{9}$/,
-          message: "请输入正确的手机号格式",
-          trigger: "blur",
-        },
-      ],
-      password: [
-        { required: true, message: "请输入新密码", trigger: "blur" },
-        {
-          min: 6,
-          max: 16,
-          message: "密码长度必须在6-16位之间",
-          trigger: "blur",
-        },
-      ],
-      confirmPassword: [
-        { required: true, message: "请确认新密码", trigger: "blur" },
-        {
-          validator: (rule, value, callback) => {
-            if (value !== forgotForm.password) {
-              callback(new Error("两次输入的密码不一致"));
-            } else {
-              callback();
-            }
-          },
-          trigger: "blur",
-        },
-      ],
-    };
+    startCountDown();
+    ElMessage.success("验证码已发送到您的邮箱");
+  } catch (error) {
+    ElMessage.error(error.message || "验证码发送失败");
+  }
+};
 
-    const countDownText = ref("获取验证码");
-
-    const startCountDown = () => {
-      isCountingDown.value = true;
-      countDown.value = 60;
-      const timer = setInterval(() => {
-        countDown.value--;
-        countDownText.value = `${countDown.value}秒后重试`;
-        if (countDown.value <= 0) {
-          clearInterval(timer);
-          isCountingDown.value = false;
-          countDownText.value = "获取验证码";
-        }
-      }, 1000);
-    };
-
-    const getVerificationCode = async () => {
-      if (!forgotForm.email || !forgotForm.phone) {
-        ElMessage.warning("请先完整填写邮箱和手机号");
-        return;
-      }
-
-      // 验证邮箱格式
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(forgotForm.email)) {
-        ElMessage.warning("请输入正确的邮箱格式");
-        return;
-      }
-
-      // 验证手机号格式
-      const phoneRegex = /^1[3-9]\d{9}$/;
-      if (!phoneRegex.test(forgotForm.phone)) {
-        ElMessage.warning("请输入正确的手机号格式");
-        return;
-      }
-
+// 提交重置密码
+const handleSubmit = () => {
+  forgotFormRef.value.validate(async (valid) => {
+    if (valid) {
       try {
-        await request({
-          url: "/user/sendEmail",
-          method: "post",
-          data: {
-            email: forgotForm.email,
-          },
-        });
+        // TODO: 调用重置密码接口
 
-        startCountDown();
-        ElMessage.success("验证码已发送到您的邮箱");
+        ElMessage.success("密码重置成功");
+        visible.value = false;
+        forgotFormRef.value.resetFields();
       } catch (error) {
-        ElMessage.error(error.message || "验证码发送失败");
+        ElMessage.error(error.message || "密码重置失败");
       }
-    };
-
-    const handleSubmit = () => {
-      forgotFormRef.value.validate(async (valid) => {
-        if (valid) {
-          try {
-            // TODO: 调用重置密码接口
-            ElMessage.success("密码重置成功");
-            visible.value = false;
-            forgotFormRef.value.resetFields();
-          } catch (error) {
-            ElMessage.error(error.message || "密码重置失败");
-          }
-        }
-      });
-    };
-
-    return {
-      visible,
-      forgotForm,
-      forgotFormRef,
-      rules,
-      isCountingDown,
-      countDownText,
-      getVerificationCode,
-      handleSubmit,
-      handleForgotPassword,
-    };
-  },
+    }
+  });
 };
 </script>
+
 
 <style scoped>
 .cover {

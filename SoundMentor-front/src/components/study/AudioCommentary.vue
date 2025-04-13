@@ -65,8 +65,8 @@
             <el-link type="primary" href="">
               <el-icon><Download /></el-icon>下载
             </el-link>
+            <!-- TODO 删除音频 -->
             <el-link type="primary" href="">
-              <!-- TODO 删除音频 -->
               <el-icon><Delete /></el-icon>删除
             </el-link>
           </div>

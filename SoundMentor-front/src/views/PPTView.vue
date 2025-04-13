@@ -84,7 +84,7 @@ const generateExplain = async () => {
     return;
   }
 
-  const form = {
+  const form_sum = {
     type: "PPT_SUMMARY",
     taskType: "PPT_SUMMARY",
     pptUrl: pptUrls[0],
@@ -94,7 +94,7 @@ const generateExplain = async () => {
     ElMessage({ message: "生成中...", type: "info" });
 
     // 启动任务
-    const taskResponse = await taskExecutionService(form);
+    const taskResponse = await taskExecutionService(form_sum);
     const taskId = taskResponse.data; // 任务 ID
 
     // 获取第一页结果

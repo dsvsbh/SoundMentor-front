@@ -188,6 +188,7 @@ import { userLoginService, userRegisterService } from "@/api/user.js";
 import { ElMessage } from "element-plus";
 import ForgotPasswordDialog from "./ForgotPasswordDialog.vue";
 import { sendEmailService } from "@/api/user.js";
+import { fetchAllAudioLibraries } from "@/utils/VoiceList";
 
 export default {
   props: {
@@ -283,6 +284,7 @@ export default {
               const storage = this.rememberMe ? localStorage : sessionStorage;
               storage.setItem("token", res.data.token);
               localStorage.setItem("isLogin", true);
+
               this.$router.push("/");
             } else {
               ElMessage.error(res.data || "登录失败");
@@ -291,10 +293,10 @@ export default {
             console.error("登录失败:", error);
             ElMessage.error(error.message || "登录失败，请稍后重试");
           } finally {
-            this.isLoadingLogin = false; // Reset loading state
+            this.isLoadingLogin = false;
           }
         } else {
-          this.isLoadingLogin = false; // Reset loading state if validation fails
+          this.isLoadingLogin = false;
         }
       });
     },
