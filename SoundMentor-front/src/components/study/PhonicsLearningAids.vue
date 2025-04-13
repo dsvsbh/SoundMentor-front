@@ -25,11 +25,11 @@
           <div class="function">
             <div class="func">
               <div class="icon">
-                <el-icon color="#409eff" size="30" style="padding: 10px"
-                  ><List
-                /></el-icon>
+                <el-icon color="#409eff" size="30" style="padding: 10px">
+                  <List />
+                </el-icon>
               </div>
-              <div class="right" @click="practiceWords">
+              <div class="right" @click="practiceWords(item.title)">
                 <div class="item-title">单词练习</div>
                 <div class="content" style="font-size: 12px; color: #909399">
                   基础发音练习，掌握声调和音节
@@ -38,14 +38,14 @@
             </div>
             <div class="func">
               <div class="icon">
-                <el-icon color="#409eff" size="30" style="padding: 10px"
-                  ><Avatar
-                /></el-icon>
+                <el-icon color="#409eff" size="30" style="padding: 10px">
+                  <Avatar />
+                </el-icon>
               </div>
-              <div class="right" @click="practiceSpeech">
-                <div class="item-title">演讲练习</div>
+              <div class="right" @click="practiceSpeech(item.title)">
+                <div class="item-title">朗诵练习</div>
                 <div class="content" style="font-size: 12px; color: #909399">
-                  长篇演讲练习，锻炼表达能力
+                  诗歌朗诵练习，锻炼表达能力
                 </div>
               </div>
             </div>
@@ -62,30 +62,35 @@ import { ref } from "vue";
 import Footer from "../headFoot/Footer.vue";
 import { List, Avatar } from "@element-plus/icons-vue";
 import router from "@/router";
+
+// 语言到参数的映射
+const languageMap = {
+  普通话: "chinese",
+  英语: "english",
+};
+
 const studyList = ref([
-  {
-    id: 1,
-    title: "普通话",
-  },
-  {
-    id: 2,
-    title: "英语",
-  },
-  {
-    id: 3,
-    title: "...",
-  },
+  { id: 1, title: "普通话" },
+  { id: 2, title: "英语" },
+  { id: 3, title: "..." },
 ]);
 
-const practiceWords = () => {
+// 动态跳转到单词练习页面
+const practiceWords = (title) => {
+  console.log(title);
+  const languageParam = languageMap[title] || "chinese";
   router.push({
-    path: "/study/learn/words",
+    path: `/study/learn/words`,
+    query: { language: languageParam },
   });
 };
 
-const practiceSpeech = () => {
+// 动态跳转到朗诵练习页面
+const practiceSpeech = (title) => {
+  const languageParam = languageMap[title] || "chinese";
   router.push({
-    path: "/study/learn/speech",
+    path: `/study/learn/speech`,
+    query: { language: languageParam },
   });
 };
 </script>
@@ -97,7 +102,7 @@ const practiceSpeech = () => {
   background-color: white;
   margin: 30px auto;
   border-radius: 15px;
-  min-height: 100vh;
+  min-height: 60vh;
   width: 1135px;
   align-items: center;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);

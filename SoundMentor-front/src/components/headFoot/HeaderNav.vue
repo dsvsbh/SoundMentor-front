@@ -17,7 +17,7 @@
       <el-menu-item index="/docs">声音样本库</el-menu-item>
       <el-menu-item index="/ppt">有声PPT制作</el-menu-item>
       <el-menu-item index="/read">预设文本朗读</el-menu-item>
-      <el-menu-item index="/study">语言学习辅助</el-menu-item>
+      <el-menu-item index="/study/learn">语言学习辅助</el-menu-item>
 
       <el-sub-menu index="3" class="right" active-text-color="black">
         <template #title

@@ -104,7 +104,7 @@
           <el-button
             type="primary"
             :icon="UploadFilled"
-            @click="isUploadVisible = !isUploadVisible"
+            @click="handleUploadClick"
             :disabled="currentRole === 0"
             >上传文件</el-button
           >
@@ -130,7 +130,7 @@
               <text style="font-size: 16px; font-weight: 600">{{
                 file.fileName
               }}</text>
-              <!-- TODO -->
+              <!-- TODO 文件信息-->
               <el-icon v-if="currentRole !== 0" @click="updateFileInfo"
                 ><InfoFilled
               /></el-icon>
@@ -265,6 +265,10 @@ const getTagType = (role) => {
 };
 
 let isUploadVisible = ref(false);
+const handleUploadClick = () => {
+  isUploadVisible = !isUploadVisible;
+  fetchFiles();
+};
 
 // 文件过滤
 const buttonList = ["全部", "PPT", "音频", "图片", "文档"]; // 筛选按钮列表

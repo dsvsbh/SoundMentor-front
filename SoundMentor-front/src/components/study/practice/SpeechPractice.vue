@@ -6,7 +6,7 @@
       </div>
       <!-- TODO 语言埋点 -->
       <div class="title">
-        <span>英文 - 演讲练习</span>
+        <span>{{ language === "english" ? "英文" : "中文" }} - 朗诵练习</span>
         <div class="bar"></div>
       </div>
     </div>
@@ -18,7 +18,7 @@
       </div>
     </div>
     <div class="content">
-      <!-- TODO 滚动展示，每次展示5条 -->
+      <!-- 滚动展示，每次展示5条 -->
       <div
         class="list"
         v-for="(item, index) in displayedSpeechList"
@@ -27,30 +27,59 @@
       >
         <div>{{ item }}</div>
       </div>
+
       <div class="buttons">
-        <el-button type="primary" :icon="VideoPlay" plain>播放示范</el-button>
+        <el-button
+          type="primary"
+          :icon="VideoPlay"
+          plain
+          @click="speak(displayedSpeechList[highlightIndex])"
+          :disabled="isRecording"
+          >播放示范</el-button
+        >
         <div>
-          <el-button type="default" @click="nextPage" v-if="hasNextHighlight"
+          <el-button
+            type="default"
+            @click="lastPage"
+            :disabled="!hasPreHighlight"
+            >上一个</el-button
+          >
+          <el-button
+            type="default"
+            @click="nextPage"
+            :disabled="!hasNextHighlight"
             >下一个</el-button
           >
-          <el-button :icon="Microphone" type="success">开始录音</el-button>
-          <el-button type="primary">提交评估</el-button>
+          <el-button
+            :type="isRecording ? 'danger' : 'primary'"
+            @click="toggleRecording"
+          >
+            {{ isRecording ? "停止录音" : "开始录音" }}
+          </el-button>
+
+          <el-button
+            type="primary"
+            :disabled="!recordedText"
+            @click="submitEvaluation"
+            >提交评估</el-button
+          >
         </div>
       </div>
     </div>
+
     <div class="result" v-if="showResult">
       <div class="result-box">
         <span class="title" style="font-weight: bold; margin-bottom: 20px"
           >评估结果</span
         >
         <span class="grade" style="font-size: 80px; font-weight: bold"
-          >93分</span
+          >{{ grade }}分</span
         >
-        <span class="rate">发音不错</span>
+        <span class="rate">{{ feedback }}</span>
       </div>
       <div class="suggest">
         <span>改进建议</span>
-        <div class="suggest-content">{}</div>
+        <div class="suggest-content" v-html="highlightedText"></div>
       </div>
     </div>
   </div>
@@ -62,33 +91,77 @@ import Footer from "@/components/headFoot/Footer.vue";
 import { ArrowLeft, VideoPlay, Microphone } from "@element-plus/icons-vue";
 import { onMounted, ref, computed } from "vue";
 import router from "@/router";
+import { useRoute } from "vue-router";
+import { ElMessage } from "element-plus";
+import { getRandomWords } from "@/api/language";
 
+const route = useRoute();
+const language = route.query.language;
+const languageMap = {
+  english: "en-US",
+  chinese: "zh-CN",
+  french: "fr-FR",
+  spanish: "es-ES",
+};
 const back = () => {
   router.back();
 };
-const speechContent =
-  "尊敬的各位老师、亲爱的同学们：大家好！今天我想和大家分享一个重要的话题——如何积极面对挑战。有些挑战像高山一样巍峨，让我们感到难以攀登；另一些挑战则像暴风雨，来得突然且猛烈，让我们措手不及。然而，正是这些挑战，塑造了我们的品格，锻炼了我们的意志。";
+const speechContent = ref(
+  "尊敬的各位老师、亲爱的同学们：大家好！今天我想和大家分享一个重要的话题——如何积极面对挑战。有些挑战像高山一样巍峨，让我们感到难以攀登；另一些挑战则像暴风雨，来得突然且猛烈，让我们措手不及。然而，正是这些挑战，塑造了我们的品格，锻炼了我们的意志。"
+);
+
 const speechList = ref([]);
+const fetchWordList = async () => {
+  try {
+    const curLang = language.toUpperCase();
+    const response = await getRandomWords({
+      language: curLang,
+      type: "POETRY",
+    });
+
+    if (response && typeof response === "object") {
+      speechContent.value = response.content;
+      console.log(speechContent.value);
+      handleSpeech(speechContent);
+    } else {
+      console.warn("API 返回数据为空或格式不正确");
+    }
+  } catch (error) {
+    ElMessage.error(`获取诗歌失败：${error.message}`);
+  }
+};
+
+fetchWordList(); // 在组件加载时调用 fetchWordList
 
 const handleSpeech = (content) => {
-  const parts = content
-    .split(/[。；、！.，——]/)
-    .filter((part) => part.trim() !== "");
-  parts.forEach((part) => {
-    speechList.value.push(part.trim());
-  });
+  // 使用正则表达式分隔内容
+  const parts = content.value
+    .split(/[\n，。]+/)
+    .map((item) => item.trim())
+    .filter((item) => item !== "");
+  speechList.value = parts;
+  console.log(speechList.value);
 };
 
 const pageSize = 5;
 const currentPage = ref(0);
 const highlightIndex = ref(0);
 
+// 展示当前页面的文本列表
 const displayedSpeechList = computed(() => {
   const start = currentPage.value * pageSize;
   const end = start + pageSize;
   return speechList.value.slice(start, end);
 });
+const hasPreHighlight = computed(() => {
+  return highlightIndex.value > 0 || hasPrePage.value;
+});
 
+const hasPrePage = computed(() => {
+  return (currentPage.value - 1) * pageSize > speechList.value.length;
+});
+
+// 高亮文本
 const hasNextHighlight = computed(() => {
   return (
     highlightIndex.value < displayedSpeechList.value.length - 1 ||
@@ -99,17 +172,152 @@ const hasNextHighlight = computed(() => {
 const hasNextPage = computed(() => {
   return (currentPage.value + 1) * pageSize < speechList.value.length;
 });
+const lastPage = () => {
+  if (highlightIndex.value > 0) {
+    highlightIndex.value--;
+    resetEvaluation();
+  } else if (hasNextPage.value) {
+    currentPage.value--;
+    highlightIndex.value = 4;
+  }
+};
 
 const nextPage = () => {
   if (highlightIndex.value < displayedSpeechList.value.length - 1) {
     highlightIndex.value++;
+    resetEvaluation();
   } else if (hasNextPage.value) {
     currentPage.value++;
     highlightIndex.value = 0;
   }
 };
 
-const showResult = ref(true);
+const showResult = ref(false);
+const grade = ref(0);
+const feedback = ref("");
+const highlightedText = ref("");
+
+const speak = (sentence) => {
+  console.log(sentence);
+  const utterance = new SpeechSynthesisUtterance(sentence);
+  utterance.lang = languageMap[language] || "en-US";
+  speechSynthesis.speak(utterance);
+};
+// 状态管理
+const isRecording = ref(false);
+const recordedText = ref("");
+let recognition;
+
+const initializeSpeechRecognition = () => {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    ElMessage.error("您的浏览器不支持 Web Speech API");
+    return;
+  }
+
+  // 请求麦克风权限
+  navigator.mediaDevices
+    .getUserMedia({ audio: true })
+    .then(() => {
+      console.log("麦克风权限已授予");
+
+      recognition = new SpeechRecognition();
+      recognition.lang = languageMap[language] || "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript; // 获取识别结果
+        recordedText.value = transcript;
+      };
+
+      recognition.onerror = (event) => {
+        ElMessage.warning("语音识别错误: 无法识别");
+        console.error("SpeechRecognitionError:", event);
+      };
+
+      recognition.onend = () => {
+        isRecording.value = false;
+      };
+    })
+    .catch((error) => {
+      console.error("麦克风权限被拒绝:", error);
+      ElMessage.error("无法访问麦克风，请检查浏览器设置");
+    });
+};
+
+// 开始录音
+const startRecording = () => {
+  if (!recognition) {
+    initializeSpeechRecognition();
+  }
+  recordedText.value = ""; // 重置识别结果
+  isRecording.value = true;
+  recognition.start(); // 开始语音识别
+};
+
+// 停止录音
+const stopRecording = () => {
+  if (recognition) {
+    recognition.stop(); // 停止语音识别
+    isRecording.value = false;
+  }
+};
+
+// 切换录音状态
+const toggleRecording = () => {
+  if (isRecording.value) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+};
+
+const submitEvaluation = () => {
+  const currentSentence = displayedSpeechList.value[highlightIndex.value];
+
+  // 确保 currentSentence 是有效的
+  if (!currentSentence) {
+    ElMessage.error("当前句子无效，无法进行评估。");
+    return;
+  }
+
+  console.warn(currentSentence);
+  const userWord = recordedText.value;
+  console.log(userWord);
+
+  // 字符串比对并标红不同的字母
+  let highlighted = "";
+  for (let i = 0; i < currentSentence.length; i++) {
+    if (userWord[i] === currentSentence[i]) {
+      highlighted += currentSentence[i];
+    } else {
+      highlighted += `<span style="color: red">${currentSentence[i]}</span>`;
+    }
+  }
+
+  highlightedText.value = highlighted;
+
+  // 简单评分逻辑
+  const correctLetters = userWord
+    .split("")
+    .filter((char, index) => char === currentSentence[index]).length;
+  grade.value = Math.round((correctLetters / currentSentence.length) * 100);
+  feedback.value = grade.value > 80 ? "发音不错" : "需要加强发音练习";
+
+  showResult.value = true;
+};
+
+// 重置评估状态
+const resetEvaluation = () => {
+  recordedText.value = "";
+  showResult.value = false;
+  grade.value = 0;
+  feedback.value = "";
+  highlightedText.value = "";
+};
 onMounted(() => {
   handleSpeech(speechContent);
 });
@@ -122,7 +330,7 @@ onMounted(() => {
   background-color: white;
   margin: 30px auto;
   border-radius: 15px;
-  min-height: 100vh;
+  min-height: 80vh;
   width: 1135px;
   align-items: center;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
@@ -176,6 +384,7 @@ onMounted(() => {
   width: 90%;
   border-radius: 10px;
   border: 1px solid #ebebeb;
+  margin-bottom: 30px;
   .list {
     padding: 20px;
     min-height: 20px;

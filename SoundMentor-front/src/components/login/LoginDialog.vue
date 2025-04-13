@@ -13,7 +13,11 @@
           prop="username"
           :rules="[{ required: true, message: '请输入账号', trigger: 'blur' }]"
         >
-          <el-input v-model="loginForm.username" placeholder="账户" />
+          <el-input
+            v-model="loginForm.username"
+            @keyup.enter="handleLogin"
+            placeholder="账户"
+          />
         </el-form-item>
         <el-form-item
           prop="password"
@@ -23,6 +27,7 @@
             v-model="loginForm.password"
             type="password"
             placeholder="密码"
+            @keyup.enter="handleLogin"
           />
         </el-form-item>
         <div class="under-pwd">

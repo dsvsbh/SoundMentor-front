@@ -108,11 +108,13 @@ const features = ref([
     title: "有声PPT制作",
     description: "专业的有声资料库，供学习使用。",
     icon: Document,
+    path: "/ppt",
   },
   {
     title: "预设文本朗读",
     description: "高效的文档助手，快速生成所需资料。",
     icon: Reading,
+    path: "/read",
   },
   {
     title: "语言学习辅助",
