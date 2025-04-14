@@ -135,8 +135,12 @@
               <el-link type="primary" href="" :underline="false">
                 <el-icon><Download /></el-icon>下载
               </el-link>
-              <!-- TODO 删除音频 -->
-              <el-link type="primary" href="" :underline="false">
+              <el-link
+                type="primary"
+                href="javascript:void(0)"
+                :underline="false"
+                @click="handleDelete"
+              >
                 <el-icon><Delete /></el-icon>删除
               </el-link>
             </div>
@@ -174,6 +178,8 @@ import { ref, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { taskExecutionService, getTaskDetailById } from "@/api/task";
 import { fetchAllAudioLibraries } from "@/utils/VoiceList";
+import { getNormalTtsRecord, delTtsRecord } from "@/api/read";
+import { ElMessageBox } from "element-plus";
 
 const text = ref(""); // 用户输入文本
 const options = []; // 语言选择列表
@@ -282,33 +288,57 @@ const pollTaskStatus = () => {
 };
 
 // 分页功能
-const audioList = [
-  {
-    name: "示例文本1.mp3",
-    date: "2025.4.1",
-    format: "MP3",
-    duration: "3:30",
-    audioSrc: "/audio/example1.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本2.mp3",
-    date: "2025.4.2",
-    format: "MP3",
-    duration: "4:00",
-    audioSrc: "/audio/example2.mp3",
-    checked: false,
-  },
-  {
-    name: "示例文本3.mp3",
-    date: "2025.4.3",
-    format: "MP3",
-    duration: "2:15",
-    audioSrc: "/audio/example3.mp3",
-    checked: false,
-  },
-  // 其他示例音频
-];
+const audioList = ref([]);
+
+const fetchTtsRecords = async () => {
+  const form = {
+    pageNum: currentPage.value,
+    pageSize: pageSize.value,
+  };
+  const res = await getNormalTtsRecord(form);
+  if (res && res.records) {
+    const audioListWithDuration = await Promise.all(
+      res.records.map((record) => {
+        return new Promise((resolve) => {
+          const audio = new Audio();
+          audio.src = record.fileUrl;
+          audio.addEventListener("loadedmetadata", () => {
+            resolve({
+              ...record,
+              name: record.voiceName,
+              date: record.createTime,
+              format: "MP3",
+              duration: formatDuration(audio.duration),
+              audioSrc: record.fileUrl,
+              checked: false,
+            });
+          });
+          audio.addEventListener("error", () => {
+            console.error(`读取音频时长失败: ${record.fileUrl}`);
+            resolve({
+              ...record,
+              name: record.voiceName,
+              date: record.createTime,
+              format: "MP3",
+              duration: 0,
+              audioSrc: record.fileUrl,
+              checked: false,
+            });
+          });
+        });
+      })
+    );
+
+    audioList.value = audioListWithDuration;
+  }
+};
+
+const formatDuration = (seconds) => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+};
+
 const currentPage = ref(1);
 const pageSize = ref(5);
 const totalItems = ref(audioList.length);
@@ -321,10 +351,33 @@ const paginatedItems = computed(() => {
 const handlePageChange = (newPage) => {
   currentPage.value = newPage;
 };
+// 删除处理逻辑
+const handleDelete = async () => {
+  try {
+    // 弹出确认框
+    await ElMessageBox.confirm("确定要删除这条记录吗？", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+
+    const result = await delTtsRecord(record.id);
+    if (result) {
+      ElMessage.success("删除成功！");
+      fetchTtsRecords();
+    }
+  } catch (err) {
+    if (err !== "cancel") {
+      ElMessage.error("删除失败，请重试！");
+      console.error("删除失败:", err.message);
+    }
+  }
+};
 
 onMounted(() => {
   fetchAllAudioLibraries();
   handleOption();
+  fetchTtsRecords();
 });
 </script>
 
