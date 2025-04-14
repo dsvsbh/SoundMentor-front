@@ -11,6 +11,7 @@ export const getRandomWords = async (form) => {
         if (form.language) {
             queryParams.append('language', form.language);
         }
+        //1123
         if (form.type) {
             queryParams.append('type', form.type);
         }
