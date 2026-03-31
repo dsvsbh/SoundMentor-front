@@ -99,12 +99,6 @@ const carouselItems = ref([
 
 const features = ref([
   {
-    title: "声音样本库",
-    description: "详细的声音技术资料，以助于理解。",
-    icon: Microphone,
-    path: "/docs",
-  },
-  {
     title: "有声PPT制作",
     description: "专业的有声资料库，供学习使用。",
     icon: Document,

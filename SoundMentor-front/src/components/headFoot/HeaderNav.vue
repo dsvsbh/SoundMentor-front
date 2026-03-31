@@ -14,7 +14,6 @@
       <el-menu-item index="/group" @click="handleMenuClick"
         >我的组织</el-menu-item
       >
-      <el-menu-item index="/docs">声音样本库</el-menu-item>
       <el-menu-item index="/ppt">有声PPT制作</el-menu-item>
       <el-menu-item index="/read">预设文本朗读</el-menu-item>
       <el-menu-item index="/study/learn">语言学习辅助</el-menu-item>

@@ -2,7 +2,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 //导入组件
 import Home from '../views/Home.vue'
-import DocsView from '../views/DocsView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import GroupView from '../views/GroupView.vue'
 import GroupDetail from '../components/group/GroupDetail.vue'
@@ -23,14 +22,6 @@ const routes = [
         component: Home,
         meta: {
             title: '首页'
-        }
-    },
-    {
-        path: '/docs',
-        name: 'docs',
-        component: DocsView,
-        meta: {
-            title: '声音样本库'
         }
     },
     {

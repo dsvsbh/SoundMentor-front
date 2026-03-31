@@ -119,7 +119,6 @@ export default {
         services: {
           title: "产品服务",
           items: [
-            { icon: Microphone, text: "声音样本库" },
             { icon: Document, text: "有声PPT制作" },
             { icon: Reading, text: "预览文本朗读" },
             { icon: Cellphone, text: "语言学习辅助" },
@@ -144,10 +143,8 @@ export default {
     };
   },
   methods: {
-    getLink(serviceText) {
+      getLink(serviceText) {
       switch (serviceText) {
-        case "声音样本库":
-          return "/docs";
         case "有声PPT制作":
           return "/ppt";
         case "预览文本朗读":
