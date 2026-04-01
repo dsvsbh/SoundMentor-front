@@ -8,21 +8,10 @@ const baseURL = '/api';
 const instance = axios.create({ baseURL })
 
 
-// 添加响应拦截器  
+// 添加响应拦截器
 instance.interceptors.response.use(
     result => {
-        // 检查请求的 URL  
-        const { config } = result;
-
-        if (config.url.includes('/openApi/user/login') ||
-            config.url.includes('/openApi/user/addUser') ||
-            config.url.includes('/openApi/user/sendEmail' ||
-                config.url.includes('/openApi/user/forgetPassword')
-            )) {
-            return result.data;  // 直接返回数据，不进行拦截  
-        }
-
-        // 如果业务状态码为0，代表操作成功  
+        // 如果业务状态码为0，代表操作成功
         if (result.data.code == 0) {
             return result.data;
         }
@@ -38,7 +27,7 @@ instance.interceptors.response.use(
     },
     err => {
         ElMessage.error('服务异常');
-        return Promise.reject(err); // 异步的状态转化成失败的状态  
+        return Promise.reject(err); // 异步的状态转化成失败的状态
     }
 );
 
