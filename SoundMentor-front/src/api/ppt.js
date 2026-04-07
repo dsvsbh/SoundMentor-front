@@ -206,3 +206,24 @@ export const batchDeleteTasks = async (taskIds) => {
         throw err;
     }
 };
+
+// 获取声音列表
+export const listVoices = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("认证失败！");
+        }
+        const res = await request.get('/tts/listVoices', {
+            headers: {
+                Authorization: token
+            }
+        });
+
+        return res;
+
+    } catch (err) {
+        console.log("获取声音列表错误！", err.message);
+        throw err;
+    }
+};

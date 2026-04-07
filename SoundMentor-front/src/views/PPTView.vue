@@ -16,7 +16,7 @@
               :auto-upload="false"
             >
               <div style="height: 100px">
-                <el-icon color="#24a3ff" size="50"><upload-filled /></el-icon>
+                <el-icon color="#24a3ff" size="50"><UploadFilled /></el-icon>
                 <div class="el-upload__text">点击或拖拽文件到这里上传</div>
                 <div class="el-upload__tip">支持格式：.ppt, .pptx</div>
               </div>
@@ -179,14 +179,46 @@
     </template>
   </el-dialog>
 
+  <!-- 选择声音弹窗 -->
+  <el-dialog
+    v-model="voiceDialogVisible"
+    title="选择声音"
+    width="600px"
+  >
+    <div class="voice-list">
+      <div 
+        v-for="voice in voiceList" 
+        :key="voice.id" 
+        class="voice-item"
+        :class="{ 'voice-item-selected': selectedVoice && selectedVoice.id === voice.id }"
+        @click="selectVoice(voice)"
+      >
+        <div class="voice-info">
+          <div class="voice-name">{{ voice.soundName }}</div>
+          <div class="voice-desc">{{ voice.description }}</div>
+        </div>
+        <div class="voice-preview" @click.stop="previewVoice(voice)">
+          <audio v-if="voice.soundUrl" :src="voice.soundUrl" controls @click.stop></audio>
+        </div>
+      </div>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="voiceDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmGenerateVoice" :disabled="!selectedVoice">确认生成</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
   <el-backtop :right="100" :bottom="100" />
   <Footer />
 </template>
 <script setup>
 import { ref, onUnmounted, onMounted, computed } from "vue";
 import { uploadFileService } from "@/api/file";
-import { createPPTTask, generateExplanation, generateExplanationVoice, generateSoundPPT, queryTask, listTasks, batchDeleteTasks, editExplanation } from "@/api/ppt";
+import { createPPTTask, generateExplanation, generateExplanationVoice, generateSoundPPT, queryTask, listTasks, batchDeleteTasks, editExplanation, listVoices } from "@/api/ppt";
 import { ElMessage, ElLoading } from "element-plus";
+import { UploadFilled } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
 import Footer from "@/components/headFoot/Footer.vue";
@@ -213,6 +245,12 @@ const taskName = ref('');
 const dialogVisible = ref(false);
 const selectedTaskIds = ref([]);
 const deleteDialogVisible = ref(false);
+
+// 声音选择弹窗相关
+const voiceDialogVisible = ref(false);
+const voiceList = ref([]);
+const selectedVoice = ref(null);
+let currentPreviewAudio = null;
 
 // 编辑讲解相关
 const isEditing = ref(false);
@@ -483,12 +521,71 @@ const handleGenerateExplanation = async () => {
   }
 };
 
-// 生成讲解语音
+// 生成讲解语音 - 打开声音选择弹窗
 const generateVoice = async () => {
   if (!taskId.value) {
     ElMessage.error("请先创建任务！");
     return;
   }
+
+  // 打开弹窗并查询声音列表
+  voiceDialogVisible.value = true;
+  selectedVoice.value = null;
+  
+  // 停止当前正在播放的音频
+  if (currentPreviewAudio) {
+    currentPreviewAudio.pause();
+    currentPreviewAudio = null;
+  }
+
+  // 查询声音列表
+  try {
+    const res = await listVoices();
+    console.log("声音列表响应:", res);
+    // 处理不同的响应格式
+    let data = res.data || res;
+    if (Array.isArray(data)) {
+      voiceList.value = data;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      voiceList.value = data.data;
+    } else {
+      console.error("声音列表数据格式不正确:", data);
+      ElMessage.error("获取声音列表失败");
+    }
+  } catch (error) {
+    console.error("获取声音列表失败:", error);
+    ElMessage.error("获取声音列表失败");
+  }
+};
+
+// 选择声音
+const selectVoice = (voice) => {
+  selectedVoice.value = voice;
+};
+
+// 试听声音
+const previewVoice = (voice) => {
+  // 停止当前正在播放的音频
+  if (currentPreviewAudio) {
+    currentPreviewAudio.pause();
+  }
+  // 播放选中的音频
+  const audioElements = document.querySelectorAll('.voice-preview audio');
+  audioElements.forEach(audio => {
+    if (audio !== event.target) {
+      audio.pause();
+    }
+  });
+};
+
+// 确认生成语音
+const confirmGenerateVoice = async () => {
+  if (!selectedVoice.value) {
+    ElMessage.warning("请选择一个声音！");
+    return;
+  }
+
+  voiceDialogVisible.value = false;
 
   loading.value = ElLoading.service({ fullscreen: true, text: '生成讲解语音中...' });
 
@@ -911,6 +1008,58 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
+}
+
+/* 声音列表样式 */
+.voice-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.voice-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.voice-item:hover {
+  border-color: #409eff;
+  background-color: #f5f7fa;
+}
+
+.voice-item-selected {
+  border-color: #409eff;
+  background-color: #ecf5ff;
+}
+
+.voice-info {
+  flex: 1;
+}
+
+.voice-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.voice-desc {
+  font-size: 12px;
+  color: #999;
+}
+
+.voice-preview {
+  margin-left: 20px;
+}
+
+.voice-preview audio {
+  height: 32px;
 }
 
 .task-header {
