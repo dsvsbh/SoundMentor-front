@@ -62,7 +62,7 @@ const routes = [
         name: 'ppt',
         component: PPTView,
         meta: {
-            title: 'PPT制作'
+            title: '有声课件制作'
         }
     },
     {
@@ -70,7 +70,7 @@ const routes = [
         name: 'pptEdit',
         component: PptEdit,
         meta: {
-            title: '内容编辑'
+            title: '课件内容编辑'
         }
     },
     {
@@ -132,7 +132,11 @@ const router = createRouter({
 //    路由守卫
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token');
-    if (to.path === '/group' && !token) {
+    // 需要登录的页面
+    const requiresAuth = ['/profile', '/group', '/groupDetail', '/groupMembers', '/ppt', '/pptEdit'];
+    // 检查当前路径是否需要登录
+    const isRequiresAuth = requiresAuth.some(path => to.path.startsWith(path));
+    if (isRequiresAuth && !token) {
         next('/');
     } else {
         next();

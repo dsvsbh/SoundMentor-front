@@ -14,8 +14,8 @@
       <el-menu-item index="/group" @click="handleMenuClick"
         >我的组织</el-menu-item
       >
-      <el-menu-item index="/ppt">有声PPT制作</el-menu-item>
       <el-menu-item index="/read">预设文本朗读</el-menu-item>
+      <el-menu-item index="/ppt">有声课件制作</el-menu-item>
       <el-menu-item index="/study/learn">语言学习辅助</el-menu-item>
 
       <el-sub-menu index="3" class="right" active-text-color="black">
@@ -234,4 +234,4 @@ export default {
 .right .el-menu-item:active {
   border-bottom: none;
 }
-</style> 
+</style>

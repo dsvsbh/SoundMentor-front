@@ -96,7 +96,7 @@ import { uploadFileService } from "@/api/file";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import router from "@/router";
-import { fetchAllAudioLibraries } from "@/utils/VoiceList";
+
 
 const route = useRoute();
 const uploadPPTfile = ref([]);
@@ -107,6 +107,7 @@ const selectPage = (index) => {
   currentPage.value = uploadPPTfile.value[index];
   //console.log(currentPage.value.summary);
 };
+let isComplete = ref(false);
 onMounted(() => {
   taskId.value = route.query.taskId;
 
@@ -123,8 +124,9 @@ onMounted(() => {
   if (taskId.value && isComplete.value === false) {
     startPolling();
   }
+  
+  handleOption();
 });
-let isComplete = ref(false);
 const startPolling = async () => {
   let lastLength = 0; // 上一次结果数组的长度
   let noChangeCount = 0;
@@ -224,13 +226,20 @@ const generateAudio = async () => {
   }
 };
 // 监听文本框内容变化
-const handleSummaryChange = () => {
+const handleSummaryChange = async () => {
   if (currentPage.value) {
     const index = uploadPPTfile.value.findIndex(
       (page) => page.pptPage === currentPage.value.pptPage
     );
     if (index !== -1) {
       uploadPPTfile.value[index].summary = currentPage.value.summary;
+      
+      // 保存到服务器
+      try {
+        await updatePPT(uploadPPTfile.value);
+      } catch (error) {
+        console.error("保存讲解内容失败:", error);
+      }
     }
   }
 };
@@ -280,10 +289,7 @@ const replaceAudio = () => {
   input.click();
 };
 
-onMounted(() => {
-  fetchAllAudioLibraries();
-  handleOption();
-});
+
 </script>  
   
 <style scoped>
@@ -405,4 +411,3 @@ onMounted(() => {
   margin-top: 20px;
 }
 </style>
-  

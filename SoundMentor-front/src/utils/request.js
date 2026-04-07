@@ -20,6 +20,13 @@ instance.interceptors.response.use(
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
             localStorage.setItem('isLogin', false);
+            // 更新Pinia store中的登录状态
+            import('@/stores/user').then(({ useUserStore }) => {
+                const userStore = useUserStore();
+                userStore.logout();
+            });
+            // 跳转到首页
+            window.location.href = '/';
             return Promise.reject(result.data);
         }
         console.log(result.data.message);
