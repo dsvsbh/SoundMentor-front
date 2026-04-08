@@ -185,6 +185,23 @@
     title="选择声音"
     width="600px"
   >
+    <!-- 语速调节 -->
+    <div class="speed-control">
+      <div class="speed-label">语速: {{ voiceSpeed.toFixed(1) }}</div>
+      <el-slider 
+        v-model="voiceSpeed" 
+        :min="0.5" 
+        :max="2.0" 
+        :step="0.1"
+        :format-tooltip="formatSpeedTooltip"
+      />
+      <div class="speed-tips">
+        <span>慢 (0.5)</span>
+        <span>正常 (1.0)</span>
+        <span>快 (2.0)</span>
+      </div>
+    </div>
+    
     <div class="voice-list">
       <div 
         v-for="voice in voiceList" 
@@ -250,7 +267,13 @@ const deleteDialogVisible = ref(false);
 const voiceDialogVisible = ref(false);
 const voiceList = ref([]);
 const selectedVoice = ref(null);
+const voiceSpeed = ref(1.0);
 let currentPreviewAudio = null;
+
+// 格式化速度提示
+const formatSpeedTooltip = (val) => {
+  return val.toFixed(1);
+};
 
 // 编辑讲解相关
 const isEditing = ref(false);
@@ -590,7 +613,11 @@ const confirmGenerateVoice = async () => {
   loading.value = ElLoading.service({ fullscreen: true, text: '生成讲解语音中...' });
 
   try {
-    await generateExplanationVoice(taskId.value);
+    await generateExplanationVoice({
+      taskId: taskId.value,
+      voice: selectedVoice.value.apiParam,
+      speed: voiceSpeed.value
+    });
     ElMessage({ message: "语音生成任务已启动", type: "success" });
     // 开始轮询任务状态
     startPolling();
@@ -1008,6 +1035,29 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
+}
+
+/* 语速控制样式 */
+.speed-control {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+}
+
+.speed-label {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.speed-tips {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
 }
 
 /* 声音列表样式 */

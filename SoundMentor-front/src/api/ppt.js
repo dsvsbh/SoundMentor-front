@@ -51,14 +51,13 @@ export const generateExplanation = async (taskId) => {
 };
 
 // 生成讲解语音
-export const generateExplanationVoice = async (taskId) => {
+export const generateExplanationVoice = async (data) => {
     try {
         const token = localStorage.getItem('token');
         if (!token) {
             throw new Error("认证失败！");
         }
-        const res = await request.post('/ppt/generateExplanationVoice', null, {
-            params: { taskId },
+        const res = await request.post('/ppt/generateExplanationVoice', data, {
             headers: {
                 Authorization: token,
                 'Content-Type': 'application/json'
