@@ -104,6 +104,24 @@
             <div v-if="taskStatus === 6" class="task-actions">
               <el-button type="primary" @click="handleGenerateSoundPPT">生成有声课件</el-button>
             </div>
+            <!-- 重试按钮 -->
+            <div v-if="taskStatus === 2" class="task-actions">
+              <el-button type="warning" @click="handleGenerateExplanation">重试生成讲解</el-button>
+            </div>
+            <div v-if="taskStatus === 5" class="task-actions">
+              <el-button type="warning" @click="generateVoice">重试生成语音</el-button>
+            </div>
+            <div v-if="taskStatus === 8" class="task-actions">
+              <el-button type="warning" @click="handleGenerateSoundPPT">重试生成有声课件</el-button>
+            </div>
+            <!-- 下载按钮 -->
+            <div v-if="taskStatus === 9 && taskData && taskData.audioPptFileUrl" class="task-actions">
+              <el-button type="success" @click="downloadAudioPPT">下载有声课件</el-button>
+              <el-button @click="downloadOriginalPPT">下载原始课件</el-button>
+            </div>
+            <div v-else-if="taskData && taskData.originalPptFileUrl" class="task-actions">
+              <el-button @click="downloadOriginalPPT">下载原始课件</el-button>
+            </div>
           </div>
         </el-tab-pane>
         
@@ -136,6 +154,12 @@
               <div class="task-actions">
                 <el-button type="primary" size="small" @click="loadHistoryTask(task.id)">
                   {{ task.taskStatus === 9 ? '查看' : '继续' }}
+                </el-button>
+                <el-button v-if="task.audioPptFileUrl" size="small" @click="downloadAudioPPTByTask(task)">
+                  下载有声课件
+                </el-button>
+                <el-button size="small" @click="downloadOriginalPPTByTask(task)">
+                  下载原始课件
                 </el-button>
               </div>
             </el-card>
@@ -252,6 +276,7 @@ const statusMessage = ref('');
 const previewImages = ref([]);
 const pollingInterval = ref(null);
 const loading = ref(null);
+const taskData = ref(null);
 
 // 历史任务相关
 const activeTab = ref('new');
@@ -689,6 +714,9 @@ const checkTaskStatus = async () => {
         previewImages.value = taskDetail.data.detailList.map(detail => detail.imgUrl).filter(Boolean);
       }
       
+      // 保存完整任务数据
+      taskData.value = taskDetail.data;
+      
       // 更新状态信息
       switch (status) {
         case 0: // CREATED
@@ -827,6 +855,34 @@ const saveExplanation = async () => {
     if (loading.value) {
       loading.value.close();
     }
+  }
+};
+
+// 下载有声PPT
+const downloadAudioPPT = () => {
+  if (taskData.value && taskData.value.audioPptFileUrl) {
+    window.open(taskData.value.audioPptFileUrl, '_blank');
+  }
+};
+
+// 下载原始PPT
+const downloadOriginalPPT = () => {
+  if (taskData.value && taskData.value.originalPptFileUrl) {
+    window.open(taskData.value.originalPptFileUrl, '_blank');
+  }
+};
+
+// 下载历史任务的有声PPT
+const downloadAudioPPTByTask = (task) => {
+  if (task.audioPptFileUrl) {
+    window.open(task.audioPptFileUrl, '_blank');
+  }
+};
+
+// 下载历史任务的原始PPT
+const downloadOriginalPPTByTask = (task) => {
+  if (task.originalPptFileUrl) {
+    window.open(task.originalPptFileUrl, '_blank');
   }
 };
 

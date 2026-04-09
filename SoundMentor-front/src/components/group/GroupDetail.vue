@@ -367,12 +367,13 @@ const getUploadUserRole = (file) => {
 // 根据当前激活的按钮获取选中的文件类型
 const getSelectedFileTypes = () => {
   const typeMap = {
-    // 文件类型映射
-    全部: ["MP3", "DOC", "DOCX", "PDF", "PPTX", "PNG", "JPG"],
-    PPT: ["PPTX"],
-    音频: ["MP3"],
+    // 文件类型映射（适配后端枚举）
+    全部: ["WAV", "DOC", "DOCX", "PDF", "PPT", "PPTX", "PNG", "JPG", "ZIP"],
+    PPT: ["PPT", "PPTX"],
+    音频: ["WAV"],
     图片: ["PNG", "JPG"],
     文档: ["DOC", "DOCX", "PDF"],
+    压缩包: ["ZIP"],
   };
   return typeMap[activeButton.value] || []; // 返回对应文件类型
 };
