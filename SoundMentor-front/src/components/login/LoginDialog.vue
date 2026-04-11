@@ -188,7 +188,6 @@ import { userLoginService, userRegisterService } from "@/api/user.js";
 import { ElMessage } from "element-plus";
 import ForgotPasswordDialog from "./ForgotPasswordDialog.vue";
 import { sendEmailService } from "@/api/user.js";
-import { fetchAllAudioLibraries } from "@/utils/VoiceList";
 
 export default {
   props: {

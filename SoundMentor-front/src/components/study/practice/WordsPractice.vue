@@ -79,7 +79,7 @@ import router from "@/router";
 import { useRoute } from "vue-router";
 import { ArrowLeft, VideoPlay, Microphone } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { getRandomWords } from "@/api/language";
 
 const showResult = ref(false);
@@ -98,42 +98,42 @@ const back = () => {
   router.back();
 };
 
-// 模拟单词列表
-const wordList = ref([
-  {
-    word: "Perseverance",
-    phonetic: "/ˌpɜː.sɪˈvɪə.rəns/",
-    meaning: "n. 毅力",
-  },
-]);
+// 单词列表
+const wordList = ref([]);
+const currentIndex = ref(0);
+const currentWord = ref({});
+
+// 获取单词列表
 const fetchWordList = async () => {
   try {
-    const curLang = language.toUpperCase();
+    const curLang = language === 'english' ? 'ENGLISH' : 'CHINESE';
     const response = await getRandomWords({
       language: curLang,
       type: "WORD",
     });
     if (response && typeof response === "object") {
       wordList.value = [
-        ...wordList.value,
         {
           word: response.content,
           phonetic: response.pronunciation,
           meaning: response.translation,
         },
       ];
+      currentIndex.value = 0;
+      currentWord.value = wordList.value[0];
     } else {
       console.warn("API 返回数据为空或格式不正确");
+      ElMessage.warning("获取单词失败，请重试");
     }
   } catch (error) {
     ElMessage.error(`获取单词列表失败：${error.message}`);
   }
 };
 
-fetchWordList(); // 在组件加载时调用 fetchWordList
-
-const currentIndex = ref(0);
-const currentWord = ref(wordList.value[currentIndex.value]);
+// 组件加载时获取单词
+onMounted(() => {
+  fetchWordList();
+});
 
 const grade = ref(0);
 const feedback = ref("");
@@ -147,21 +147,12 @@ const speak = (word) => {
 
 // 切换到上一个单词
 const lastWord = () => {
-  if (currentIndex.value > 0) {
-    currentIndex.value--;
-    currentWord.value = wordList.value[currentIndex.value];
-    resetEvaluation();
-  }
+  ElMessage.info("请点击下一个获取新单词");
 };
 
 // 切换到下一个单词
 const nextWord = () => {
   fetchWordList();
-  if (currentIndex.value < wordList.value.length - 1) {
-    currentIndex.value++;
-    currentWord.value = wordList.value[currentIndex.value];
-    resetEvaluation();
-  }
 };
 
 // 状态管理

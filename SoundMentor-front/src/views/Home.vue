@@ -70,6 +70,7 @@ import {
   Document,
   Reading,
   Cellphone,
+  UserFilled,
 } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router"; // 导入 vue-router
 
@@ -99,22 +100,28 @@ const carouselItems = ref([
 
 const features = ref([
   {
-    title: "有声PPT制作",
-    description: "专业的有声资料库，供学习使用。",
-    icon: Document,
-    path: "/ppt",
+    title: "组织管理",
+    description: "老师和学生的协作空间，支持文件和课件共享，促进教学互动。",
+    icon: UserFilled,
+    path: "/group",
   },
   {
     title: "预设文本朗读",
-    description: "高效的文档助手，快速生成所需资料。",
+    description: "快速将文本转换为自然流畅的语音，支持多种声音和语速调节。",
     icon: Reading,
     path: "/read",
   },
   {
+    title: "有声课件制作",
+    description: "智能生成PPT配音，打造专业有声课件，提升教学效果。",
+    icon: Document,
+    path: "/ppt",
+  },
+  {
     title: "语言学习辅助",
-    description: "多种语言学习助手，提升学习效果。",
+    description: "提供发音评测、语音模仿、节奏训练等全方位语言学习解决方案。",
     icon: Cellphone,
-    path: "/study",
+    path: "/study/learn",
   },
 ]);
 
@@ -127,7 +134,11 @@ const statistics = ref([
 
 const handleFeatureClick = (path) => {
   if (path) {
-    router.push(path);
+    // 先滚动到顶部，再跳转路由
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      router.push(path);
+    }, 100);
   }
 };
 </script>  

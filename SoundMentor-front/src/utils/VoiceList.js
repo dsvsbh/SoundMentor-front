@@ -42,14 +42,3 @@ const fetchAudioLibrary = async (type) => {
     }
 };
 
-export const fetchAllAudioLibraries = async () => {
-    try {
-        // 使用 await 来获取音频库数据  
-        const allAudioList = await fetchAudioLibrary(2);
-
-        // 更新 audioList  
-        localStorage.setItem("audioList", JSON.stringify(allAudioList)); // 将合并后的音频列表存储到 localStorage  
-    } catch (error) {
-        console.error("获取所有音频库时发生错误:", error);
-    }
-};    

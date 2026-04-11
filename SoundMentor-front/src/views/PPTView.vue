@@ -1,7 +1,12 @@
 <template>
   <div class="ppt-container">
     <div class="ppt-box">
-      <div class="title">有声课件制作</div>
+      <div class="page-header">
+        <div class="page-title">
+          <text style="font-size: 30px; font-weight: bold">有声课件制作</text>
+          <div class="bar"></div>
+        </div>
+      </div>
       
       <!-- 标签页：新建任务 / 历史任务 -->
       <el-tabs v-model="activeTab" class="task-tabs" @tab-change="handleTabChange">
@@ -961,6 +966,20 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.page-header {
+  padding: 20px 30px 0 30px;
+}
+.page-title {
+  display: flex;
+  flex-direction: column;
+}
+.bar {
+  width: 122px;
+  height: 10px;
+  background: linear-gradient(135deg, #3fa4fa, #36cfdd);
+  margin-top: 8px;
 }
 
 .title {

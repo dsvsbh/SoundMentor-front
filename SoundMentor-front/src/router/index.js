@@ -126,14 +126,22 @@ const routes = [
 //创建路由器
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
+    // 路由跳转时滚动到页面顶部
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
+            return savedPosition
+        } else {
+            return { top: 0 }
+        }
+    }
 });
 
 //    路由守卫
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token');
     // 需要登录的页面
-    const requiresAuth = ['/profile', '/group', '/groupDetail', '/groupMembers', '/ppt', '/pptEdit'];
+    const requiresAuth = ['/profile', '/group', '/groupDetail', '/groupMembers', '/ppt', '/pptEdit', '/read'];
     // 检查当前路径是否需要登录
     const isRequiresAuth = requiresAuth.some(path => to.path.startsWith(path));
     if (isRequiresAuth && !token) {

@@ -99,48 +99,49 @@ const language = route.query.language;
 const languageMap = {
   english: "en-US",
   chinese: "zh-CN",
-  french: "fr-FR",
-  spanish: "es-ES",
 };
 const back = () => {
   router.back();
 };
-const speechContent = ref(
-  "尊敬的各位老师、亲爱的同学们：大家好！今天我想和大家分享一个重要的话题——如何积极面对挑战。有些挑战像高山一样巍峨，让我们感到难以攀登；另一些挑战则像暴风雨，来得突然且猛烈，让我们措手不及。然而，正是这些挑战，塑造了我们的品格，锻炼了我们的意志。"
-);
 
+const speechContent = ref("");
 const speechList = ref([]);
-const fetchWordList = async () => {
+
+// 获取朗诵内容
+const fetchSpeechContent = async () => {
   try {
-    const curLang = language.toUpperCase();
+    const curLang = language === 'english' ? 'ENGLISH' : 'CHINESE';
     const response = await getRandomWords({
       language: curLang,
       type: "POETRY",
     });
 
-    if (response && typeof response === "object") {
+    if (response && typeof response === "object" && response.content) {
       speechContent.value = response.content;
-      console.log(speechContent.value);
-      handleSpeech(speechContent);
+      handleSpeech(speechContent.value);
     } else {
       console.warn("API 返回数据为空或格式不正确");
+      ElMessage.warning("获取朗诵内容失败，请重试");
     }
   } catch (error) {
-    ElMessage.error(`获取诗歌失败：${error.message}`);
+    ElMessage.error(`获取朗诵内容失败：${error.message}`);
   }
 };
 
-fetchWordList(); // 在组件加载时调用 fetchWordList
-
+// 处理朗诵内容，分割成句子
 const handleSpeech = (content) => {
   // 使用正则表达式分隔内容
-  const parts = content.value
+  const parts = content
     .split(/[\n，。]+/)
     .map((item) => item.trim())
     .filter((item) => item !== "");
   speechList.value = parts;
-  console.log(speechList.value);
 };
+
+// 组件加载时获取朗诵内容
+onMounted(() => {
+  fetchSpeechContent();
+});
 
 const pageSize = 5;
 const currentPage = ref(0);
@@ -317,9 +318,6 @@ const resetEvaluation = () => {
   feedback.value = "";
   highlightedText.value = "";
 };
-onMounted(() => {
-  handleSpeech(speechContent);
-});
 </script>
 
 <style lang="scss" scoped>

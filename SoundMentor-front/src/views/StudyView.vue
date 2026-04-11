@@ -1,8 +1,10 @@
 <template>
   <div class="study-container">
-    <div class="button-container">
-      <button class="animated-button">语言学习辅助</button>
-      <button class="static-button">个性化语音讲解</button>
+    <div class="page-header">
+      <div class="page-title">
+        <text style="font-size: 30px; font-weight: bold">语言学习辅助</text>
+        <div class="bar"></div>
+      </div>
     </div>
     <div class="card-container">
       <div class="up">
@@ -29,6 +31,7 @@
       </div>
     </div>
   </div>
+  <el-backtop :right="100" :bottom="100" />
   <Footer />
 </template>  
 
@@ -66,6 +69,21 @@ const toAudio = () => {
   width: 1135px;
   align-items: center;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.page-header {
+  width: 100%;
+  padding: 20px 30px 0 30px;
+}
+.page-title {
+  display: flex;
+  flex-direction: column;
+}
+.bar {
+  width: 122px;
+  height: 10px;
+  background: linear-gradient(135deg, #3fa4fa, #36cfdd);
+  margin-top: 8px;
 }
 
 .button-container {

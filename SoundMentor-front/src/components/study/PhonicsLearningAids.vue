@@ -2,15 +2,20 @@
   <div class="study-container">
     <div class="phonic-container">
       <div class="header">
-        <div
-          style="
-            font-size: 27px;
-            font-weight: bold;
-            margin-top: 20px;
-            color: #5d5d5d;
-          "
-        >
-          语言学习辅助
+        <div style="display: flex; align-items: center; gap: 15px">
+          <div
+            style="
+              font-size: 27px;
+              font-weight: bold;
+              margin-top: 20px;
+              color: #5d5d5d;
+            "
+          >
+            语言学习辅助
+          </div>
+          <el-tag type="info" size="small" style="margin-top: 20px">
+            暂时只支持中文和英文
+          </el-tag>
         </div>
         <div class="bar"></div>
       </div>
@@ -54,6 +59,7 @@
       </div>
     </div>
   </div>
+  <el-backtop :right="100" :bottom="100" />
   <Footer />
 </template>
 
@@ -72,7 +78,6 @@ const languageMap = {
 const studyList = ref([
   { id: 1, title: "普通话" },
   { id: 2, title: "英语" },
-  { id: 3, title: "..." },
 ]);
 
 // 动态跳转到单词练习页面
@@ -119,10 +124,11 @@ const practiceSpeech = (title) => {
 }
 .cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px 20px;
   padding: 0 30px;
   padding-bottom: 30px;
+  justify-items: center;
 }
 .card-item {
   background-color: #ffffff;
