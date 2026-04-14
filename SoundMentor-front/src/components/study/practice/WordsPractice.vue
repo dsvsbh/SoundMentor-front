@@ -21,7 +21,6 @@
           :icon="VideoPlay"
           plain
           @click="speak(currentWord.word)"
-          :disabled="isRecording"
           >播放示范</el-button
         >
 
@@ -29,47 +28,55 @@
           <el-button
             type="default"
             @click="lastWord"
-            :disabled="currentIndex === 0"
+            :disabled="currentIndex <= 0"
             >上一个</el-button
           >
           <el-button
             type="default"
             @click="nextWord"
-            :disabled="currentIndex === wordList.length - 1"
             >下一个</el-button
           >
           <el-button
-            :type="isRecording ? 'danger' : 'primary'"
-            @click="toggleRecording"
-          >
-            {{ isRecording ? "停止录音" : "开始录音" }}
-          </el-button>
-
-          <el-button
             type="primary"
-            :disabled="!recordedText"
-            @click="submitEvaluation"
-            >提交评估</el-button
+            @click="showAddContentDialog"
+            >向系统添加{{ language === "english" ? "单词" : "词语" }}</el-button
           >
         </div>
       </div>
     </div>
-    <div class="result" v-if="showResult">
-      <div class="result-box">
-        <span class="title" style="font-weight: bold; margin-bottom: 20px"
-          >评估结果</span
-        >
-        <span class="grade" style="font-size: 80px; font-weight: bold"
-          >{{ grade }}分</span
-        >
-        <span class="rate">{{ feedback }}</span>
-      </div>
-      <div class="suggest">
-        <span>改进建议</span>
-        <div class="suggest-content" v-html="highlightedText"></div>
-      </div>
-    </div>
+
   </div>
+
+  <!-- 向系统添加内容弹窗 -->
+  <el-dialog
+    v-model="addContentDialogVisible"
+    :title="'向系统添加' + (language === 'english' ? '单词' : '词语')"
+    width="500px"
+  >
+    <el-form 
+      ref="addContentFormRef"
+      :model="addContentForm" 
+      :rules="addContentRules"
+      label-width="80px"
+    >
+      <el-form-item label="内容" prop="content">
+        <el-input v-model="addContentForm.content" placeholder="请输入内容" />
+      </el-form-item>
+      <el-form-item label="发音">
+        <el-input v-model="addContentForm.pronunciation" placeholder="请输入发音" />
+      </el-form-item>
+      <el-form-item label="翻译">
+        <el-input v-model="addContentForm.translation" placeholder="请输入翻译" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="addContentDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addContentToSystem">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
   <Footer />
 </template>
 
@@ -77,12 +84,11 @@
 import Footer from "@/components/headFoot/Footer.vue";
 import router from "@/router";
 import { useRoute } from "vue-router";
-import { ArrowLeft, VideoPlay, Microphone } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ArrowLeft, VideoPlay } from "@element-plus/icons-vue";
+import { ElMessage, ElDialog, ElForm, ElFormItem, ElInput, ElButton } from "element-plus";
 import { ref, onMounted } from "vue";
-import { getRandomWords } from "@/api/language";
+import { getRandomWords, uploadLangContent } from "@/api/language";
 
-const showResult = ref(false);
 const route = useRoute();
 const language = route.query.language;
 
@@ -100,7 +106,7 @@ const back = () => {
 
 // 单词列表
 const wordList = ref([]);
-const currentIndex = ref(0);
+const currentIndex = ref(-1);
 const currentWord = ref({});
 
 // 获取单词列表
@@ -112,15 +118,15 @@ const fetchWordList = async () => {
       type: "WORD",
     });
     if (response && typeof response === "object") {
-      wordList.value = [
-        {
-          word: response.content,
-          phonetic: response.pronunciation,
-          meaning: response.translation,
-        },
-      ];
-      currentIndex.value = 0;
-      currentWord.value = wordList.value[0];
+      const newWord = {
+        word: response.content,
+        phonetic: response.pronunciation,
+        meaning: response.translation,
+      };
+      // 将新单词添加到列表中，而不是重置整个数组
+      wordList.value.push(newWord);
+      currentIndex.value = wordList.value.length - 1;
+      currentWord.value = newWord;
     } else {
       console.warn("API 返回数据为空或格式不正确");
       ElMessage.warning("获取单词失败，请重试");
@@ -135,9 +141,7 @@ onMounted(() => {
   fetchWordList();
 });
 
-const grade = ref(0);
-const feedback = ref("");
-const highlightedText = ref("");
+
 
 const speak = (word) => {
   const utterance = new SpeechSynthesisUtterance(word);
@@ -147,121 +151,88 @@ const speak = (word) => {
 
 // 切换到上一个单词
 const lastWord = () => {
-  ElMessage.info("请点击下一个获取新单词");
+  if (currentIndex.value > 0) {
+    currentIndex.value--;
+    currentWord.value = wordList.value[currentIndex.value];
+  } else {
+    ElMessage.info("已经是第一个单词了");
+  }
 };
 
 // 切换到下一个单词
 const nextWord = () => {
-  fetchWordList();
-};
-
-// 状态管理
-const isRecording = ref(false);
-const recordedText = ref("");
-let recognition;
-
-const initializeSpeechRecognition = () => {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    ElMessage.error("您的浏览器不支持 Web Speech API");
-    return;
-  }
-
-  // 请求麦克风权限
-  navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then(() => {
-      console.log("麦克风权限已授予");
-
-      recognition = new SpeechRecognition();
-      recognition.lang = languageMap[language] || "en-US";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript; // 获取识别结果
-        recordedText.value = transcript.toLowerCase(); //全部小写
-      };
-
-      recognition.onerror = (event) => {
-        ElMessage.warning("语音识别错误: 无法识别");
-        console.error("SpeechRecognitionError:", event);
-      };
-
-      recognition.onend = () => {
-        isRecording.value = false;
-      };
-    })
-    .catch((error) => {
-      console.error("麦克风权限被拒绝:", error);
-      ElMessage.error("无法访问麦克风，请检查浏览器设置");
-    });
-};
-
-// 开始录音
-const startRecording = () => {
-  if (!recognition) {
-    initializeSpeechRecognition();
-  }
-
-  recordedText.value = ""; // 重置识别结果
-  isRecording.value = true;
-  recognition.start(); // 开始语音识别
-};
-
-// 停止录音
-const stopRecording = () => {
-  if (recognition) {
-    recognition.stop(); // 停止语音识别
-    isRecording.value = false;
-  }
-};
-
-// 切换录音状态
-const toggleRecording = () => {
-  if (isRecording.value) {
-    stopRecording();
+  if (currentIndex.value < wordList.value.length - 1) {
+    // 如果有下一个单词，直接切换
+    currentIndex.value++;
+    currentWord.value = wordList.value[currentIndex.value];
   } else {
-    startRecording();
+    // 否则请求新的单词
+    fetchWordList();
   }
 };
 
-// 评估逻辑
-const submitEvaluation = () => {
-  const originalWord = currentWord.value.word;
-  const userWord = recordedText.value;
+// 向系统添加内容弹窗
+const addContentDialogVisible = ref(false);
+const addContentForm = ref({
+  content: '',
+  pronunciation: '',
+  translation: ''
+});
+const addContentFormRef = ref(null);
 
-  // 字符串比对并标红不同的字母
-  let highlighted = "";
-  for (let i = 0; i < originalWord.length; i++) {
-    if (userWord[i] === originalWord[i]) {
-      highlighted += originalWord[i];
+// 表单验证规则
+const addContentRules = ref({
+  content: [
+    { required: true, message: '请输入内容', trigger: 'blur' }
+  ]
+});
+
+const showAddContentDialog = () => {
+  // 清空表单，不自动填充内容
+  addContentForm.value = {
+    content: '',
+    pronunciation: '',
+    translation: ''
+  };
+  addContentDialogVisible.value = true;
+};
+
+// 向系统添加内容
+const addContentToSystem = async () => {
+  // 表单验证
+  if (!addContentFormRef.value) return;
+  
+  addContentFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const response = await uploadLangContent({
+          content: addContentForm.value.content,
+          pronunciation: addContentForm.value.pronunciation,
+          translation: addContentForm.value.translation,
+          language: language === 'english' ? 'ENGLISH' : 'CHINESE',
+          type: 'WORD'
+        });
+        
+        if (response.code === '0') {
+          ElMessage.success('成功添加到系统');
+          addContentDialogVisible.value = false;
+        } else {
+          ElMessage.error('添加失败: ' + response.message);
+        }
+      } catch (error) {
+        console.error('添加内容失败:', error);
+        ElMessage.error('添加失败，请重试');
+      }
     } else {
-      highlighted += `<span style="color: red">${originalWord[i]}</span>`;
+      ElMessage.warning('请填写所有必填项');
+      return false;
     }
-  }
-
-  highlightedText.value = highlighted;
-
-  // 简单评分逻辑
-  const correctLetters = userWord
-    .split("")
-    .filter((char, index) => char === originalWord[index]).length;
-  grade.value = Math.round((correctLetters / originalWord.length) * 100);
-  feedback.value = grade.value > 80 ? "发音不错" : "需要加强发音练习";
-
-  showResult.value = true;
+  });
 };
 
 // 重置评估状态
 const resetEvaluation = () => {
-  recordedText.value = "";
-  showResult.value = false;
-  grade.value = 0;
-  feedback.value = "";
-  highlightedText.value = "";
+  // 不再需要重置评估状态
 };
 </script>
 

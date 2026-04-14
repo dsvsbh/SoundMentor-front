@@ -41,16 +41,24 @@ export const uploadLangContent = async (form) => {
             throw new Error("认证失败！");
         }
 
-        const res = await request.post('/language-content/add', form, {
+        // 转换 language 和 type 为整数类型
+        const transformedForm = {
+            ...form,
+            language: form.language === 'CHINESE' ? 1 : form.language === 'ENGLISH' ? 2 : 1,
+            type: form.type === 'WORD' ? 1 : form.type === 'POETRY' ? 2 : 1
+        };
+
+        const res = await request.post('/language-content/add', transformedForm, {
             headers: {
                 Authorization: token
             }
         });
 
         if (res.code === '0') {
-            return res.data
+            return res
         } else {
             ElMessage.error(res.message)
+            throw new Error(res.message)
         }
 
     } catch (err) {

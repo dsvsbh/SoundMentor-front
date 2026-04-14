@@ -17,10 +17,10 @@
       </div>
     </div>
     <div class="content">
-      <!-- 滚动展示，每次展示5条 -->
+      <!-- 滚动展示所有诗句 -->
       <div
         class="list"
-        v-for="(item, index) in displayedSpeechList"
+        v-for="(item, index) in speechList"
         :key="index"
         :class="{ highlight: index === highlightIndex }"
       >
@@ -32,67 +32,88 @@
           type="primary"
           :icon="VideoPlay"
           plain
-          @click="speak(displayedSpeechList[highlightIndex])"
-          :disabled="isRecording"
+          @click="speak(speechList[highlightIndex])"
           >播放示范</el-button
         >
         <div>
           <el-button
             type="default"
-            @click="lastPage"
-            :disabled="!hasPreHighlight"
-            >上一个</el-button
+            @click="prevSentence"
+            :disabled="highlightIndex <= 0"
+            >上一句</el-button
           >
           <el-button
             type="default"
-            @click="nextPage"
-            :disabled="!hasNextHighlight"
-            >下一个</el-button
+            @click="nextSentence"
+            :disabled="highlightIndex >= speechList.length - 1"
+            >下一句</el-button
           >
           <el-button
-            :type="isRecording ? 'danger' : 'primary'"
-            @click="toggleRecording"
+            type="default"
+            @click="prevPoem"
+            :disabled="poemHistory.length <= 1"
+            >上一首</el-button
           >
-            {{ isRecording ? "停止录音" : "开始录音" }}
-          </el-button>
-
+          <el-button
+            type="default"
+            @click="nextPoem"
+            >下一首</el-button
+          >
           <el-button
             type="primary"
-            :disabled="!recordedText"
-            @click="submitEvaluation"
-            >提交评估</el-button
+            @click="showAddContentDialog"
+            >向系统添加{{ language === "english" ? "诗歌" : "诗词" }}</el-button
           >
         </div>
       </div>
     </div>
 
-    <div class="result" v-if="showResult">
-      <div class="result-box">
-        <span class="title" style="font-weight: bold; margin-bottom: 20px"
-          >评估结果</span
-        >
-        <span class="grade" style="font-size: 80px; font-weight: bold"
-          >{{ grade }}分</span
-        >
-        <span class="rate">{{ feedback }}</span>
-      </div>
-      <div class="suggest">
-        <span>改进建议</span>
-        <div class="suggest-content" v-html="highlightedText"></div>
-      </div>
-    </div>
+
   </div>
+
+  <!-- 向系统添加内容弹窗 -->
+  <el-dialog
+    v-model="addContentDialogVisible"
+    :title="'向系统添加' + (language === 'english' ? '诗歌' : '诗词')"
+    width="500px"
+  >
+    <el-form 
+      ref="addContentFormRef"
+      :model="addContentForm" 
+      :rules="addContentRules"
+      label-width="80px"
+    >
+      <el-form-item label="内容" prop="content">
+        <el-input 
+          v-model="addContentForm.content" 
+          type="textarea" 
+          rows="6" 
+          placeholder="请输入内容，每行诗句需要换行"
+        />
+        <div style="color: #909399; font-size: 12px; margin-top: 5px;">
+          提示：每行诗句需要换行
+        </div>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="addContentDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addContentToSystem">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
   <Footer />
 </template>
 
 <script setup>
 import Footer from "@/components/headFoot/Footer.vue";
-import { ArrowLeft, VideoPlay, Microphone } from "@element-plus/icons-vue";
+import { ArrowLeft, VideoPlay } from "@element-plus/icons-vue";
 import { onMounted, ref, computed } from "vue";
 import router from "@/router";
 import { useRoute } from "vue-router";
-import { ElMessage } from "element-plus";
-import { getRandomWords } from "@/api/language";
+import { ElMessage, ElDialog, ElForm, ElFormItem, ElInput, ElButton } from "element-plus";
+import { getRandomWords, uploadLangContent } from "@/api/language";
 
 const route = useRoute();
 const language = route.query.language;
@@ -106,6 +127,9 @@ const back = () => {
 
 const speechContent = ref("");
 const speechList = ref([]);
+const poemHistory = ref([]); // 存储历史诗歌
+const currentPoemIndex = ref(-1); // 当前诗歌在历史记录中的索引
+const highlightIndex = ref(0); // 当前高亮的诗句索引
 
 // 获取朗诵内容
 const fetchSpeechContent = async () => {
@@ -117,8 +141,24 @@ const fetchSpeechContent = async () => {
     });
 
     if (response && typeof response === "object" && response.content) {
+      const poem = {
+        content: response.content,
+        sentences: []
+      };
+      // 处理诗歌内容，分割成句子
+      poem.sentences = response.content
+        .split(/[\n，。]+/)
+        .map((item) => item.trim())
+        .filter((item) => item !== "");
+      
+      // 添加到历史记录
+      poemHistory.value.push(poem);
+      currentPoemIndex.value = poemHistory.value.length - 1;
+      
+      // 更新当前显示的内容
       speechContent.value = response.content;
-      handleSpeech(speechContent.value);
+      speechList.value = poem.sentences;
+      highlightIndex.value = 0; // 重置诗句索引
     } else {
       console.warn("API 返回数据为空或格式不正确");
       ElMessage.warning("获取朗诵内容失败，请重试");
@@ -128,74 +168,50 @@ const fetchSpeechContent = async () => {
   }
 };
 
-// 处理朗诵内容，分割成句子
-const handleSpeech = (content) => {
-  // 使用正则表达式分隔内容
-  const parts = content
-    .split(/[\n，。]+/)
-    .map((item) => item.trim())
-    .filter((item) => item !== "");
-  speechList.value = parts;
-};
-
 // 组件加载时获取朗诵内容
 onMounted(() => {
   fetchSpeechContent();
 });
 
-const pageSize = 5;
-const currentPage = ref(0);
-const highlightIndex = ref(0);
-
-// 展示当前页面的文本列表
-const displayedSpeechList = computed(() => {
-  const start = currentPage.value * pageSize;
-  const end = start + pageSize;
-  return speechList.value.slice(start, end);
-});
-const hasPreHighlight = computed(() => {
-  return highlightIndex.value > 0 || hasPrePage.value;
-});
-
-const hasPrePage = computed(() => {
-  return (currentPage.value - 1) * pageSize > speechList.value.length;
-});
-
-// 高亮文本
-const hasNextHighlight = computed(() => {
-  return (
-    highlightIndex.value < displayedSpeechList.value.length - 1 ||
-    hasNextPage.value
-  );
-});
-
-const hasNextPage = computed(() => {
-  return (currentPage.value + 1) * pageSize < speechList.value.length;
-});
-const lastPage = () => {
+// 上一句
+const prevSentence = () => {
   if (highlightIndex.value > 0) {
     highlightIndex.value--;
-    resetEvaluation();
-  } else if (hasNextPage.value) {
-    currentPage.value--;
-    highlightIndex.value = 4;
   }
 };
 
-const nextPage = () => {
-  if (highlightIndex.value < displayedSpeechList.value.length - 1) {
+// 下一句
+const nextSentence = () => {
+  if (highlightIndex.value < speechList.value.length - 1) {
     highlightIndex.value++;
-    resetEvaluation();
-  } else if (hasNextPage.value) {
-    currentPage.value++;
+  }
+};
+
+// 上一首
+const prevPoem = () => {
+  if (currentPoemIndex.value > 0) {
+    currentPoemIndex.value--;
+    const poem = poemHistory.value[currentPoemIndex.value];
+    speechContent.value = poem.content;
+    speechList.value = poem.sentences;
     highlightIndex.value = 0;
   }
 };
 
-const showResult = ref(false);
-const grade = ref(0);
-const feedback = ref("");
-const highlightedText = ref("");
+// 下一首
+const nextPoem = () => {
+  if (currentPoemIndex.value < poemHistory.value.length - 1) {
+    // 如果有下一首，直接切换
+    currentPoemIndex.value++;
+    const poem = poemHistory.value[currentPoemIndex.value];
+    speechContent.value = poem.content;
+    speechList.value = poem.sentences;
+    highlightIndex.value = 0;
+  } else {
+    // 否则请求新的诗歌
+    fetchSpeechContent();
+  }
+};
 
 const speak = (sentence) => {
   console.log(sentence);
@@ -203,120 +219,65 @@ const speak = (sentence) => {
   utterance.lang = languageMap[language] || "en-US";
   speechSynthesis.speak(utterance);
 };
-// 状态管理
-const isRecording = ref(false);
-const recordedText = ref("");
-let recognition;
 
-const initializeSpeechRecognition = () => {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
+// 向系统添加内容弹窗
+const addContentDialogVisible = ref(false);
+const addContentForm = ref({
+  content: ''
+});
+const addContentFormRef = ref(null);
 
-  if (!SpeechRecognition) {
-    ElMessage.error("您的浏览器不支持 Web Speech API");
-    return;
-  }
+// 表单验证规则
+const addContentRules = ref({
+  content: [
+    { required: true, message: '请输入内容', trigger: 'blur' }
+  ]
+});
 
-  // 请求麦克风权限
-  navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then(() => {
-      console.log("麦克风权限已授予");
-
-      recognition = new SpeechRecognition();
-      recognition.lang = languageMap[language] || "en-US";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript; // 获取识别结果
-        recordedText.value = transcript;
-      };
-
-      recognition.onerror = (event) => {
-        ElMessage.warning("语音识别错误: 无法识别");
-        console.error("SpeechRecognitionError:", event);
-      };
-
-      recognition.onend = () => {
-        isRecording.value = false;
-      };
-    })
-    .catch((error) => {
-      console.error("麦克风权限被拒绝:", error);
-      ElMessage.error("无法访问麦克风，请检查浏览器设置");
-    });
+const showAddContentDialog = () => {
+  // 清空表单，不自动填充内容
+  addContentForm.value = {
+    content: ''
+  };
+  addContentDialogVisible.value = true;
 };
 
-// 开始录音
-const startRecording = () => {
-  if (!recognition) {
-    initializeSpeechRecognition();
-  }
-  recordedText.value = ""; // 重置识别结果
-  isRecording.value = true;
-  recognition.start(); // 开始语音识别
-};
-
-// 停止录音
-const stopRecording = () => {
-  if (recognition) {
-    recognition.stop(); // 停止语音识别
-    isRecording.value = false;
-  }
-};
-
-// 切换录音状态
-const toggleRecording = () => {
-  if (isRecording.value) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
-};
-
-const submitEvaluation = () => {
-  const currentSentence = displayedSpeechList.value[highlightIndex.value];
-
-  // 确保 currentSentence 是有效的
-  if (!currentSentence) {
-    ElMessage.error("当前句子无效，无法进行评估。");
-    return;
-  }
-
-  console.warn(currentSentence);
-  const userWord = recordedText.value;
-  console.log(userWord);
-
-  // 字符串比对并标红不同的字母
-  let highlighted = "";
-  for (let i = 0; i < currentSentence.length; i++) {
-    if (userWord[i] === currentSentence[i]) {
-      highlighted += currentSentence[i];
+// 向系统添加内容
+const addContentToSystem = async () => {
+  // 表单验证
+  if (!addContentFormRef.value) return;
+  
+  addContentFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const response = await uploadLangContent({
+          content: addContentForm.value.content,
+          pronunciation: '', // 诗歌不需要音标
+          translation: '', // 诗歌不需要翻译
+          language: language === 'english' ? 'ENGLISH' : 'CHINESE',
+          type: 'POETRY'
+        });
+        
+        if (response.code === '0') {
+          ElMessage.success('成功添加到系统');
+          addContentDialogVisible.value = false;
+        } else {
+          ElMessage.error('添加失败: ' + response.message);
+        }
+      } catch (error) {
+        console.error('添加内容失败:', error);
+        ElMessage.error('添加失败，请重试');
+      }
     } else {
-      highlighted += `<span style="color: red">${currentSentence[i]}</span>`;
+      ElMessage.warning('请填写所有必填项');
+      return false;
     }
-  }
-
-  highlightedText.value = highlighted;
-
-  // 简单评分逻辑
-  const correctLetters = userWord
-    .split("")
-    .filter((char, index) => char === currentSentence[index]).length;
-  grade.value = Math.round((correctLetters / currentSentence.length) * 100);
-  feedback.value = grade.value > 80 ? "发音不错" : "需要加强发音练习";
-
-  showResult.value = true;
+  });
 };
 
 // 重置评估状态
 const resetEvaluation = () => {
-  recordedText.value = "";
-  showResult.value = false;
-  grade.value = 0;
-  feedback.value = "";
-  highlightedText.value = "";
+  // 不再需要重置评估状态
 };
 </script>
 
